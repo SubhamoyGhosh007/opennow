@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, getProviders, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,15 +18,70 @@ function revertAfterHold(wrap: HTMLElement | null, input: HTMLElement | null) {
   }, hold);
 }
 
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+      <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.3h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.7 3.5 2.7.2.1c2.2-2 3.6-5 3.6-9.3z" />
+      <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5l-.7.1-3.6 2.8v.7C2.9 21.5 7 24 12 24z" />
+      <path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.7-3.6-2.8-.1.1C.5 7.9 0 9.9 0 12s.5 4.1 1.4 5.9l3.8-3.5z" />
+      <path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2C17.9 1.1 15.2 0 12 0 7 0 2.9 2.5 1.4 6.1l3.8 3.5c1-2.8 3.7-4.9 6.8-4.9z" />
+    </svg>
+  );
+}
+
+function MicrosoftMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+      <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022" />
+      <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00" />
+      <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF" />
+      <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900" />
+    </svg>
+  );
+}
+
+const MARKS: Record<string, { label: string; Mark: () => JSX.Element }> = {
+  google: { label: "Continue with Google", Mark: GoogleMark },
+  "microsoft-entra-id": { label: "Continue with Microsoft", Mark: MicrosoftMark },
+};
+
 export default function LoginPage() {
+  return (
+    <React.Suspense>
+      <LoginForm />
+    </React.Suspense>
+  );
+}
+
+function LoginForm() {
   const [username, setUsername] = React.useState("admin");
   const [password, setPassword] = React.useState("Password123!");
   const [failed, setFailed] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [oauth, setOauth] = React.useState<{ id: string; name: string }[]>([]);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const boxRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { status } = useSession();
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") && !rawCallback.startsWith("//") && rawCallback !== "/login"
+      ? rawCallback
+      : "/workspace/incident";
+
+  React.useEffect(() => {
+    getProviders().then((p) => {
+      if (!p) return;
+      setOauth(Object.values(p).filter((x) => x.id !== "credentials").map((x) => ({ id: x.id, name: x.name })));
+    });
+  }, []);
+
+  // Already signed in → leave the gate.
+  React.useEffect(() => {
+    if (status === "authenticated") router.replace(callbackUrl);
+  }, [status, router, callbackUrl]);
 
   const submit = async () => {
     setBusy(true);
@@ -46,7 +101,7 @@ export default function LoginPage() {
       revertAfterHold(wrap, box);
     } else {
       setDone(true);
-      setTimeout(() => router.push("/workspace/incident"), 650);
+      setTimeout(() => router.push(callbackUrl), 650);
     }
   };
 
@@ -63,6 +118,28 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground">Seeded: admin · itil.fulfiller · abel.tuter</p>
           </div>
         </div>
+
+        {oauth.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {oauth.map((p) => {
+              const meta = MARKS[p.id] || { label: `Continue with ${p.name}`, Mark: ShieldCheck as any };
+              const Mark = meta.Mark;
+              return (
+                <Button
+                  key={p.id}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => signIn(p.id, { callbackUrl })}
+                >
+                  <Mark /> {meta.label}
+                </Button>
+              );
+            })}
+            <div className="flex items-center gap-3 py-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {

@@ -10,6 +10,7 @@ export async function GET(req: Request, { params }: { params: { table: string; i
   if (!TABLE_MAP[table]) return NextResponse.json({ error: `Unknown table ${table}` }, { status: 400 });
   if (!/^[0-9a-fA-F-]{36}$/.test(id)) return NextResponse.json({ error: "Invalid UUID format" }, { status: 400 });
 
+  if (!(await getUserContext(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const sql = getSql();
   try {
     if (["incident", "change_request", "problem", "task"].includes(table)) {
@@ -49,6 +50,7 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
 
   const body = await req.json();
   const ctx = await getUserContext(req);
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const sql = getSql();
   const userId = ctx.id;
   const roles: string[] = ctx.roles || [];

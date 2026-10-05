@@ -62,6 +62,43 @@ npm run build
 | `network.tech` | itil |
 | `abel.tuter` | employee |
 
+## Sign in with Google / Microsoft
+
+OAuth is optional and lights up automatically when its env vars are set —
+buttons appear on `/login`, first-time users are matched by email, otherwise
+provisioned with the `employee` role.
+
+```bash
+# Google Cloud → APIs & Services → Credentials → OAuth client ID (Web app)
+# Authorized redirect URI: http://localhost:3000/api/auth/callback/google
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+
+# Azure Portal → App registrations → New → Web redirect URI:
+# http://localhost:3000/api/auth/callback/microsoft-entra-id
+AUTH_MICROSOFT_ENTRA_ID_ID=
+AUTH_MICROSOFT_ENTRA_ID_SECRET=
+AUTH_MICROSOFT_ENTRA_ID_TENANT=common   # or your tenant ID
+```
+
+See `.env.example`. Restart `npm run dev` after adding keys.
+
+## Authorization (every page)
+
+`src/middleware.ts` (Edge-safe, verifies the Auth.js JWT via `jose`) gates
+**all** routes except `/login`, `/api/auth/*` and static assets:
+
+| Who | Where |
+|---|---|
+| Anyone, no session (`/` shows sign-in prompts for live sections) | `/`, `/login` |
+| Signed-out pages → `/login`; session-less API → `401` | everything else |
+| `employee` (any signed-in user) | `/catalog`, `/tickets` |
+| `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/*` |
+
+Table API routes additionally re-check the session server-side (`401` with no
+session). Roles live on the JWT (`token.roles`) and session (`session.user.roles`).
+Pure gate logic in `src/lib/security/gates.ts` is unit-tested (`tests/gates.test.ts`).
+
 ## Table API (Next.js backend)
 
 Base: `http://localhost:3000/api/now/table/:table`

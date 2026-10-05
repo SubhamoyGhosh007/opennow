@@ -6,6 +6,7 @@ import "@/styles/transitions.css";
 import "@/styles/view-transitions.css";
 import "@/styles/aceternity.css";
 import { ToastHost } from "@/components/motion/toast";
+import { AuthProvider } from "@/components/auth/session-provider";
 
 export const metadata: Metadata = {
   title: "OpenNow — Service Operations Deck",
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`dark ${display.variable} ${body.variable} ${ticket.variable}`}>
       <body className="min-h-screen bg-background text-foreground">
-        <ToastHost>{children}</ToastHost>
+        <AuthProvider>
+          <ToastHost>{children}</ToastHost>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -40,9 +40,9 @@ function useLiveIncidents(limit = 100) {
   const [rows, setRows] = React.useState<Incident[] | null>(null);
   const refresh = React.useCallback(() => {
     fetch(`/api/now/table/incident?sysparm_limit=${limit}`)
-      .then((r) => r.json())
-      .then((j) => startTransition(() => setRows(j.result || [])))
-      .catch(() => startTransition(() => setRows([])));
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => startTransition(() => setRows(j ? j.result || [] : null)))
+      .catch(() => startTransition(() => setRows(null)));
   }, [limit]);
   React.useEffect(() => {
     refresh();
@@ -56,12 +56,23 @@ function QueryConsole() {
   const [rows, setRows] = React.useState<Incident[] | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [total, setTotal] = React.useState<number | null>(null);
+  const [denied, setDenied] = React.useState(false);
 
   const run = React.useCallback((q: string) => {
     setLoading(true);
+    setDenied(false);
     fetch(`/api/now/table/incident?sysparm_limit=6${q ? `&sysparm_query=${encodeURIComponent(q)}` : ""}`)
-      .then((r) => r.json())
-      .then((j) => {
+      .then(async (r) => {
+        if (r.status === 401) {
+          startTransition(() => {
+            setDenied(true);
+            setRows([]);
+            setTotal(null);
+            setLoading(false);
+          });
+          return;
+        }
+        const j = await r.json();
         startTransition(() => {
           setRows(j.result || []);
           setTotal((j.result || []).length);
@@ -130,9 +141,18 @@ function QueryConsole() {
             <Skeleton className="h-9 w-full" />
           </div>
         ) : rows.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
-            Empty set — the engine answered, nothing matched. Loosen the query.
-          </p>
+          denied ? (
+            <div className="rounded-md border border-dashed border-border p-5 text-center text-sm">
+              <p className="text-muted-foreground">Live queries need a session — the engine answered 401.</p>
+              <TransitionLink href="/login" className="mt-2 inline-block font-medium text-[hsl(var(--signal))] hover:underline">
+                Sign in to query live data
+              </TransitionLink>
+            </div>
+          ) : (
+            <p className="rounded-md border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
+              Empty set — the engine answered, nothing matched. Loosen the query.
+            </p>
+          )
         ) : (
           <ul className="space-y-1.5">
             {rows.map((r) => (
@@ -228,6 +248,14 @@ export default function Home() {
               <RotateCw className="h-3.5 w-3.5" /> Resync
             </button>
           </div>
+          {rows === null && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              <TransitionLink href="/login" className="text-[hsl(var(--signal))] hover:underline">
+                Sign in
+              </TransitionLink>{" "}
+              for live queue counts.
+            </p>
+          )}
         </div>
 
         <div className="mt-10">
