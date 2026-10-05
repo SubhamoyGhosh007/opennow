@@ -1,0 +1,135 @@
+/* Aceternity-style signature effects, hand-built (spotlight, grid, moving border).
+   Colors follow the OpenNow ops-deck palette, not aceternity defaults. */
+
+/* Spotlight beam that tracks the pointer via --mx/--my custom props */
+.ac-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.ac-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    480px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(91, 140, 255, 0.16),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+.ac-spotlight:hover::before,
+.ac-spotlight[data-on="true"]::before {
+  opacity: 1;
+}
+
+/* Blueprint grid backdrop */
+.bg-blueprint {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.bg-blueprint-fade {
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 35%, transparent 100%);
+}
+
+/* Moving border (conic gradient rotating around the button edge) */
+@property --ac-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.ac-moving-border {
+  position: relative;
+  border-radius: 9999px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--ac-angle),
+    rgba(91, 140, 255, 0) 0%,
+    rgba(91, 140, 255, 0.9) 12%,
+    rgba(47, 212, 167, 0.7) 20%,
+    rgba(91, 140, 255, 0) 32%
+  );
+  animation: ac-spin 4s linear infinite;
+}
+@keyframes ac-spin {
+  to { --ac-angle: 360deg; }
+}
+
+/* Lamp glow under the masthead */
+.ac-lamp {
+  background: radial-gradient(
+    ellipse 52% 42% at 50% 0%,
+    rgba(91, 140, 255, 0.28),
+    rgba(91, 140, 255, 0.06) 55%,
+    transparent 75%
+  );
+}
+
+/* 3-D tilt stage for deck cards */
+.ac-tilt {
+  perspective: var(--tilt-perspective);
+}
+.ac-tilt-card {
+  transform-style: preserve-3d;
+  transition:
+    transform var(--tilt-follow) var(--tilt-follow-ease);
+  will-change: transform;
+}
+.ac-tilt[data-tilting="true"] .ac-tilt-card {
+  transition:
+    transform 80ms linear;
+}
+
+/* Shimmering brand line (uses t-shimmer tokens) */
+.ac-brand-shimmer {
+  --shimmer-base: #8ea3c7;
+  --shimmer-highlight: #eef3ff;
+}
+
+/* Status pulse dot */
+.ac-pulse-dot {
+  position: relative;
+}
+.ac-pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  opacity: 0.5;
+  animation: ac-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ac-ping {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  80%, 100% { transform: scale(1.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-moving-border,
+  .ac-pulse-dot::after {
+    animation: none !important;
+  }
+  .ac-spotlight::before {
+    display: none;
+  }
+}
+
+/* Rail tooltip — CSS-only reveal on hover/focus, opens right of the trigger. */
+.group:hover .rail-tip,
+.group:focus-within .rail-tip {
+  opacity: 1;
+  transition:
+    opacity var(--tt-in-dur) var(--tt-in-ease) var(--tt-delay);
+}
+.rail-tip {
+  transition:
+    opacity var(--tt-out-dur) var(--tt-out-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-tip { transition: none !important; }
+}

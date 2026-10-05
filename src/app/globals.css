@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn theme — paper (portal) */
+    --background: 220 33% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 223 100% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 93%;
+    --secondary-foreground: 222 47% 18%;
+    --muted: 220 20% 93%;
+    --muted-foreground: 220 12% 44%;
+    --accent: 220 20% 93%;
+    --accent-foreground: 222 47% 18%;
+    --destructive: 348 84% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 18% 88%;
+    --input: 220 18% 88%;
+    --ring: 223 100% 68%;
+    --radius: 0.625rem;
+    /* deck accents */
+    --signal: 223 100% 68%;
+    --amber: 38 92% 55%;
+    --mint: 163 68% 51%;
+    --rose: 348 84% 60%;
+  }
+
+  .dark {
+    /* ops-deck — deep ink navy */
+    --background: 229 55% 7%;
+    --foreground: 220 33% 94%;
+    --card: 230 42% 11%;
+    --card-foreground: 220 33% 94%;
+    --popover: 230 45% 13%;
+    --popover-foreground: 220 33% 94%;
+    --primary: 223 100% 70%;
+    --primary-foreground: 229 55% 8%;
+    --secondary: 230 35% 16%;
+    --secondary-foreground: 220 33% 92%;
+    --muted: 230 35% 15%;
+    --muted-foreground: 222 18% 64%;
+    --accent: 230 35% 16%;
+    --accent-foreground: 220 33% 94%;
+    --destructive: 348 84% 62%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 227 30% 20%;
+    --input: 227 30% 20%;
+    --ring: 223 100% 70%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  }
+  ::selection {
+    background: rgba(91, 140, 255, 0.32);
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-display), var(--font-body), sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .font-ticket {
+    font-family: var(--font-ticket), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  /* quiet deck panel — borders carry hierarchy, not shadows */
+  .deck-panel {
+    @apply rounded-xl border bg-card text-card-foreground;
+    border-color: hsl(var(--border));
+  }
+  .deck-row {
+    transition:
+      background-color var(--duration-fast) var(--ease-smooth-out),
+      border-color var(--duration-fast) var(--ease-smooth-out);
+  }
+  .deck-row:hover {
+    background: rgba(91, 140, 255, 0.07);
+  }
+  /* signal beam divider */
+  .signal-line {
+    background: linear-gradient(90deg, transparent, rgba(91, 140, 255, 0.65), transparent);
+    height: 1px;
+  }
+  /* work-notes gold tint (kept from spec, tuned for both themes) */
+  .note-internal {
+    @apply rounded-lg border border-amber-300/60 bg-amber-50 text-amber-950;
+  }
+  .dark .note-internal {
+    @apply border-amber-400/25 bg-amber-400/10 text-amber-100;
+  }
+  .note-public {
+    @apply rounded-lg border bg-card text-card-foreground;
+  }
+}
