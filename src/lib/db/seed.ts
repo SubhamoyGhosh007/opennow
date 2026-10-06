@@ -154,6 +154,83 @@ async function main() {
       VALUES (${prbTask[0].id}::uuid, 'work_notes', 'Identified unclosed socket in worker thread #4.', ${userIds["network.tech"]}::uuid)`;
   }
 
+  // Sample Knowledge Base articles
+  const kbs = [
+    {
+      number: "KB0000001",
+      short_description: "Troubleshooting Corporate VPN Connection Failures",
+      category: "Network",
+      text: "### Symptom\nUsers receive 'Gateway Timeout 504' or authentication reject when initiating WireGuard / OpenVPN sessions.\n\n### Resolution Steps\n1. Confirm SSO session is active.\n2. Verify local DNS resolver points to internal 10.0.0.2.\n3. Flush local cache: `ipconfig /flushdns`.\n4. If error persists, reboot VPN virtual tunnel interface.",
+    },
+    {
+      number: "KB0000002",
+      short_description: "Workaround: Database Connection Pool Exhaustion",
+      category: "Database",
+      text: "### Known Issue\nUnder heavy morning load, pool connections can reach saturation (max 100 conns).\n\n### Temporary Workaround\nRestart the legacy reporting worker:\n```bash\nsystemctl restart reporting-worker\n```\nPermanent fix is tracked under **PRB0000001**.",
+    },
+    {
+      number: "KB0000003",
+      short_description: "Requesting Hardware Upgrades & Ergonomic Equipment",
+      category: "Hardware",
+      text: "Employees eligible for equipment refresh (> 24 months tenure) may submit requests directly via the Service Catalog under **Workstation Accessories**.",
+    },
+  ];
+  for (const k of kbs) {
+    await sql`
+      INSERT INTO kb_knowledge (number, short_description, text, category, workflow_state, author_id)
+      VALUES (${k.number}, ${k.short_description}, ${k.text}, ${k.category}, 'published', ${userIds["itil.fulfiller"]}::uuid)
+      ON CONFLICT (number) DO NOTHING`;
+  }
+
+  // Sample Service Catalog Items with dynamic variables
+  const catItems = [
+    {
+      name: "Standard Incident Report",
+      short_description: "General technical breakdown, service interruption, or bug report.",
+      category: "Support",
+      icon: "AlertCircle",
+      variables: [
+        { name: "short_description", label: "Issue Summary", type: "string", required: true },
+        { name: "category", label: "Affected Service Area", type: "select", required: true, options: ["Software", "Hardware", "Network", "Database", "Inquiry"] },
+        { name: "urgency", label: "Urgency Level", type: "select", required: true, options: ["1 - High", "2 - Medium", "3 - Low"] },
+        { name: "impact", label: "Impact on Work", type: "select", required: true, options: ["1 - High", "2 - Medium", "3 - Low"] },
+        { name: "description", label: "Steps to Reproduce / Details", type: "textarea", required: false },
+      ],
+    },
+    {
+      name: "Developer Workstation Provisioning",
+      short_description: "Request a configured engineering laptop with local developer toolchains.",
+      category: "Hardware",
+      icon: "Laptop",
+      variables: [
+        { name: "os_choice", label: "Operating System", type: "select", required: true, options: ["macOS Sequoia (M3 Max)", "Ubuntu 24.04 LTS", "Windows 11 Enterprise"] },
+        { name: "memory", label: "Memory Configuration", type: "select", required: true, options: ["32 GB Unified Memory", "64 GB Unified Memory", "128 GB Unified Memory"] },
+        { name: "monitors", label: "Desk Display Preference", type: "select", required: true, options: ["Dual 27-inch 4K Displays", "Single 34-inch Ultrawide Curved", "Standard 24-inch Monitor"] },
+        { name: "justification", label: "Business Need & Project", type: "textarea", required: true },
+      ],
+    },
+    {
+      name: "AWS Cloud Sandbox Account",
+      short_description: "Isolated cloud account for architectural prototypes and experiments.",
+      category: "Cloud",
+      icon: "Cloud",
+      variables: [
+        { name: "cloud_provider", label: "Cloud Platform", type: "select", required: true, options: ["AWS", "Google Cloud", "Azure"] },
+        { name: "budget_tier", label: "Monthly Spend Guardrail", type: "select", required: true, options: ["$250 / month", "$1,000 / month", "$5,000 / month"] },
+        { name: "region", label: "Primary Deployment Region", type: "select", required: true, options: ["us-east-1 (N. Virginia)", "us-west-2 (Oregon)", "eu-central-1 (Frankfurt)"] },
+        { name: "expiry_weeks", label: "Sandbox Duration", type: "select", required: true, options: ["2 Weeks", "4 Weeks", "12 Weeks"] },
+        { name: "purpose", label: "Experiment Objectives", type: "textarea", required: true },
+      ],
+    },
+  ];
+
+  for (const item of catItems) {
+    await sql`
+      INSERT INTO sc_cat_item (name, short_description, category, icon, variables, active)
+      VALUES (${item.name}, ${item.short_description}, ${item.category}, ${item.icon}, ${JSON.stringify(item.variables)}::jsonb, true)
+      ON CONFLICT DO NOTHING`;
+  }
+
   console.log("Seed complete.");
   await sql.end();
 }

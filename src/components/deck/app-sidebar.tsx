@@ -9,6 +9,8 @@ import {
   TicketCheck,
   PlusCircle,
   Database,
+  BookOpen,
+  Layers,
   Users,
   Settings,
   ChevronDown,
@@ -28,6 +30,7 @@ const GROUPS: Group[] = [
     items: [
       { href: "/workspace", label: "Overview", icon: LayoutDashboard },
       { href: "/tickets", label: "My tickets", icon: TicketCheck },
+      { href: "/kb", label: "Knowledge Base", icon: BookOpen },
     ],
   },
   {
@@ -39,12 +42,16 @@ const GROUPS: Group[] = [
       { href: "/workspace/change", label: "Changes", icon: FolderKanban },
       { href: "/workspace/problem", label: "Problems", icon: TicketCheck },
       { href: "/workspace/cmdb", label: "CMDB", icon: Database },
+      { href: "/workspace/knowledge", label: "Knowledge", icon: BookOpen },
     ],
   },
   {
     id: "request",
     label: "Request",
-    items: [{ href: "/catalog", label: "New request", icon: PlusCircle }],
+    items: [
+      { href: "/catalog", label: "Service Catalog", icon: PlusCircle },
+      { href: "/workspace/catalog-builder", label: "Catalog Builder", icon: Layers },
+    ],
   },
   {
     id: "system",

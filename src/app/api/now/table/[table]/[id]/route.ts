@@ -43,8 +43,8 @@ export async function GET(req: Request, { params }: { params: { table: string; i
 
 export async function PATCH(req: Request, { params }: { params: { table: string; id: string } }) {
   const { table, id } = params;
-  if (!TABLE_MAP[table] || !["incident", "change_request", "problem", "task"].includes(table)) {
-    return NextResponse.json({ error: "PATCH only supported for task hierarchy" }, { status: 400 });
+  if (!TABLE_MAP[table] || !["incident", "change_request", "problem", "task", "kb_knowledge"].includes(table)) {
+    return NextResponse.json({ error: "PATCH not supported for this table" }, { status: 400 });
   }
   if (!/^[0-9a-fA-F-]{36}$/.test(id)) return NextResponse.json({ error: "Invalid UUID format" }, { status: 400 });
 
@@ -54,6 +54,25 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
   const sql = getSql();
   const userId = ctx.id;
   const roles: string[] = ctx.roles || [];
+
+  if (table === "kb_knowledge") {
+    try {
+      const sets: string[] = ["sys_updated_at = NOW()"];
+      const esc = (v: any) => (v === null ? "NULL" : `'${String(v).replace(/'/g, "''")}'`);
+      if (body.short_description) sets.push(`short_description = ${esc(body.short_description)}`);
+      if (body.text !== undefined) sets.push(`text = ${esc(body.text)}`);
+      if (body.category) sets.push(`category = ${esc(body.category)}`);
+      if (body.workflow_state) sets.push(`workflow_state = ${esc(body.workflow_state)}`);
+      if (body.views !== undefined) sets.push(`views = ${Number(body.views)}`);
+      if (body.helpful_count !== undefined) sets.push(`helpful_count = ${Number(body.helpful_count)}`);
+      const updated: any = await sql.unsafe(`UPDATE kb_knowledge SET ${sets.join(", ")} WHERE id = '${id}'::uuid RETURNING *`);
+      if (!updated.length) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ result: updated[0] });
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+  }
+
   try {
     const existing: any = await sql`SELECT * FROM task WHERE id = ${id}::uuid`;
     if (!existing.length) return NextResponse.json({ error: "Not found" }, { status: 404 });

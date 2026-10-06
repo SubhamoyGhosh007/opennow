@@ -12,7 +12,10 @@ export const TABLE_MAP: Record<string, { base: string; className: string; prefix
   task: { base: "task", className: "task", prefix: "TASK" },
   cmdb_ci: { base: "cmdb_ci", className: "cmdb_ci", prefix: "" },
   cmdb_rel_ci: { base: "cmdb_rel_ci", className: "cmdb_rel_ci", prefix: "" },
+  kb_knowledge: { base: "kb_knowledge", className: "kb_knowledge", prefix: "KB" },
+  sc_cat_item: { base: "sc_cat_item", className: "sc_cat_item", prefix: "" },
   sys_user: { base: "sys_user", className: "sys_user", prefix: "" },
+  sys_user_group: { base: "sys_user_group", className: "sys_user_group", prefix: "" },
   contract_sla: { base: "contract_sla", className: "contract_sla", prefix: "" },
   task_sla: { base: "task_sla", className: "task_sla", prefix: "" },
 };

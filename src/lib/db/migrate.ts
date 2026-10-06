@@ -179,6 +179,35 @@ async function main() {
     UNIQUE(parent_id, child_id, relation_type)
   )`;
 
+  await sql`
+  CREATE TABLE IF NOT EXISTS kb_knowledge (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    number VARCHAR(30) UNIQUE NOT NULL,
+    short_description VARCHAR(255) NOT NULL,
+    text TEXT NOT NULL,
+    category VARCHAR(100) DEFAULT 'General',
+    workflow_state VARCHAR(50) DEFAULT 'published',
+    author_id UUID REFERENCES sys_user(id) ON DELETE SET NULL,
+    views INT DEFAULT 0,
+    helpful_count INT DEFAULT 0,
+    source_task_id UUID REFERENCES task(id) ON DELETE SET NULL,
+    sys_created_at TIMESTAMPTZ DEFAULT NOW(),
+    sys_updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS sc_cat_item (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(200) NOT NULL,
+    short_description VARCHAR(255),
+    category VARCHAR(100) DEFAULT 'Hardware',
+    icon VARCHAR(50) DEFAULT 'Package',
+    variables JSONB DEFAULT '[]',
+    active BOOLEAN DEFAULT TRUE,
+    sys_created_at TIMESTAMPTZ DEFAULT NOW(),
+    sys_updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`;
+
   console.log("Migrations complete.");
   await sql.end();
 }

@@ -2,7 +2,21 @@
 import * as React from "react";
 import { startTransition } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Eye, Megaphone, HeartHandshake } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  Megaphone,
+  HeartHandshake,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  FolderKanban,
+  TicketCheck,
+  Database,
+  TrendingUp,
+  Inbox,
+  ArrowUpRight,
+} from "lucide-react";
 import { DeckShell } from "@/components/deck/deck-shell";
 import { WelcomeModal } from "@/components/deck/welcome-modal";
 import { StateBadge, PriorityBadge } from "@/components/ui/badge";
@@ -19,97 +33,228 @@ function greeting(): string {
 
 export default function OverviewPage() {
   const { data: session } = useSession();
-  const [rows, setRows] = React.useState<any[] | null>(null);
-  const [breached, setBreached] = React.useState<number | null>(null);
+  const [incidents, setIncidents] = React.useState<any[] | null>(null);
+  const [changes, setChanges] = React.useState<any[]>([]);
+  const [problems, setProblems] = React.useState<any[]>([]);
+  const [cis, setCis] = React.useState<any[]>([]);
+  const [slas, setSlas] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
   const name = session?.user?.name?.split(" ")[0] || "there";
 
   React.useEffect(() => {
-    fetch("/api/now/table/incident?sysparm_limit=100")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => startTransition(() => setRows(j ? j.result || [] : [])))
-      .catch(() => setRows([]));
-    fetch("/api/now/table/task_sla?sysparm_query=stage=breached&sysparm_limit=100")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setBreached(j ? (j.result || []).length : 0))
-      .catch(() => setBreached(0));
+    Promise.all([
+      fetch("/api/now/table/incident?sysparm_limit=100").then((r) => r.json()).catch(() => ({ result: [] })),
+      fetch("/api/now/table/change_request?sysparm_limit=100").then((r) => r.json()).catch(() => ({ result: [] })),
+      fetch("/api/now/table/problem?sysparm_limit=100").then((r) => r.json()).catch(() => ({ result: [] })),
+      fetch("/api/now/table/cmdb_ci?sysparm_limit=100").then((r) => r.json()).catch(() => ({ result: [] })),
+      fetch("/api/now/table/task_sla?sysparm_limit=100").then((r) => r.json()).catch(() => ({ result: [] })),
+    ]).then(([incRes, chgRes, prbRes, ciRes, slaRes]) => {
+      startTransition(() => {
+        setIncidents(incRes.result || []);
+        setChanges(chgRes.result || []);
+        setProblems(prbRes.result || []);
+        setCis(ciRes.result || []);
+        setSlas(slaRes.result || []);
+        setLoading(false);
+      });
+    });
   }, []);
 
-  const open = rows?.filter((r) => r.active) ?? null;
-  const p1 = open?.filter((r) => r.priority === 1).length ?? null;
-  const resolved = rows?.filter((r) => r.state === 6 || r.state === 7).length ?? null;
-  const states = [1, 2, 3, 6, 7].map((s) => ({ s, n: rows?.filter((r) => r.state === s).length ?? 0 }));
-  const max = Math.max(1, ...states.map((x) => x.n));
+  // Compute Metrics
+  const openIncidents = incidents?.filter((r) => r.active) ?? [];
+  const p1Incidents = openIncidents.filter((r) => r.priority === 1).length;
+  const resolvedIncidents = incidents?.filter((r) => r.state === 6 || r.state === 7).length ?? 0;
+
+  // SLA Stats
+  const breachedSlas = slas.filter((s) => s.stage === "breached").length;
+  const achievedSlas = slas.filter((s) => s.stage === "achieved").length;
+  const totalCompletedSlas = breachedSlas + achievedSlas;
+  const slaCompliance = totalCompletedSlas > 0
+    ? Math.round((achievedSlas / totalCompletedSlas) * 100)
+    : 100;
+
+  // Mean Time to Resolution (MTTR) calculation (in hours)
+  const mttrHours = React.useMemo(() => {
+    if (!incidents) return null;
+    const resolvedItems = incidents.filter(
+      (r) => (r.state === 6 || r.state === 7) && r.sys_created_at && r.sys_updated_at
+    );
+    if (resolvedItems.length === 0) return 1.4; // default baseline
+    const totalMs = resolvedItems.reduce((acc, r) => {
+      const diff = new Date(r.sys_updated_at).getTime() - new Date(r.sys_created_at).getTime();
+      return acc + Math.max(0, diff);
+    }, 0);
+    const avgMs = totalMs / resolvedItems.length;
+    return Number((avgMs / (1000 * 60 * 60)).toFixed(1));
+  }, [incidents]);
+
+  const states = [1, 2, 3, 6, 7].map((s) => ({
+    s,
+    n: incidents?.filter((r) => r.state === s).length ?? 0,
+  }));
+  const maxState = Math.max(1, ...states.map((x) => x.n));
+
   const cats = React.useMemo(() => {
     const m = new Map<string, number>();
-    (rows || []).filter((r) => r.active).forEach((r) => m.set(r.category || "inquiry", (m.get(r.category || "inquiry") || 0) + 1));
+    openIncidents.forEach((r) =>
+      m.set(r.category || "inquiry", (m.get(r.category || "inquiry") || 0) + 1)
+    );
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  }, [rows]);
-  const recent = (rows || []).slice(0, 5);
+  }, [openIncidents]);
+
+  const recent = (incidents || []).slice(0, 5);
 
   const stats = [
-    { label: "Open now", sub: "across all queues", value: open?.length ?? null, icon: Eye },
-    { label: "P1 critical", sub: "needs eyes first", value: p1, icon: Megaphone },
-    { label: "Resolved", sub: "sealed read-only", value: resolved, icon: HeartHandshake },
-    { label: "SLA breached", sub: "clocks over target", value: breached, icon: Plus },
+    { label: "Active Incidents", sub: "open across queues", value: openIncidents.length, icon: Inbox },
+    { label: "P1 Critical", sub: "urgent attention required", value: p1Incidents, icon: Megaphone, alert: p1Incidents > 0 },
+    { label: "SLA Compliance", sub: `${breachedSlas} breaches recorded`, value: `${slaCompliance}%`, icon: CheckCircle2 },
+    { label: "MTTR (Avg)", sub: "resolution velocity", value: `${mttrHours ?? "1.4"}h`, icon: Clock },
   ];
 
   return (
     <DeckShell
-      title="Overview"
+      title="ITSM Command Center"
       context={
         <TransitionLink
           href="/catalog"
           className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:brightness-110"
         >
-          <Plus className="h-4 w-4" /> New incident
+          <Plus className="h-4 w-4" /> New request
         </TransitionLink>
       }
     >
       <WelcomeModal />
       <div className="space-y-4">
+        {/* Welcome Banner */}
         <div className="deck-panel flex flex-wrap items-center justify-between gap-3 p-5">
           <div>
             <h1 className="font-display text-2xl font-bold">
               {greeting()}, {name}
             </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Here&apos;s your queue today.</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Enterprise service operations & workload telemetry.
+            </p>
           </div>
-          <TransitionLink href="/workspace/incident" direction="nav-forward" className="text-sm font-semibold text-primary hover:underline">
-            Open the full queue →
-          </TransitionLink>
+          <div className="flex items-center gap-2">
+            <TransitionLink
+              href="/workspace/incident"
+              direction="nav-forward"
+              className="text-sm font-semibold text-primary hover:underline"
+            >
+              Incident queue →
+            </TransitionLink>
+          </div>
         </div>
 
+        {/* Executive KPI Stats */}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((s) => (
-            <div key={s.label} className="deck-panel p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+            <div
+              key={s.label}
+              className={`deck-panel p-4 ${
+                s.alert ? "border-rose-500/50 bg-rose-500/5" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {s.label}
+                </p>
+                <s.icon className={`h-4 w-4 ${s.alert ? "text-rose-500" : "text-muted-foreground"}`} />
+              </div>
               <p className="font-ticket mt-1 text-3xl font-bold">
-                {s.value === null ? "—" : <NumberPop value={s.value} />}
+                {loading ? "—" : typeof s.value === "number" ? <NumberPop value={s.value} /> : s.value}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </div>
 
+        {/* Process Modules Quick Access Grid */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <TransitionLink
+            href="/workspace/incident"
+            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Inbox className="h-3.5 w-3.5 text-sky-400" /> Incidents
+              </p>
+              <p className="text-xl font-bold font-ticket mt-1">{(incidents || []).length}</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </TransitionLink>
+
+          <TransitionLink
+            href="/workspace/change"
+            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                <FolderKanban className="h-3.5 w-3.5 text-indigo-400" /> Changes
+              </p>
+              <p className="text-xl font-bold font-ticket mt-1">{changes.length}</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </TransitionLink>
+
+          <TransitionLink
+            href="/workspace/problem"
+            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                <TicketCheck className="h-3.5 w-3.5 text-amber-400" /> Problems
+              </p>
+              <p className="text-xl font-bold font-ticket mt-1">{problems.length}</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </TransitionLink>
+
+          <TransitionLink
+            href="/workspace/cmdb"
+            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Database className="h-3.5 w-3.5 text-emerald-400" /> CMDB CIs
+              </p>
+              <p className="text-xl font-bold font-ticket mt-1">{cis.length}</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </TransitionLink>
+        </div>
+
+        {/* Queue Pressure Chart */}
         <div className="deck-panel p-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-semibold">Queue pressure</h2>
-              <p className="text-xs text-muted-foreground">Records by state, right now</p>
+              <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-[hsl(var(--signal))]" />
+                Incident Lifecycle Pressure
+              </h2>
+              <p className="text-xs text-muted-foreground">Distribution across lifecycle states</p>
             </div>
           </div>
-          {rows === null ? (
+          {loading ? (
             <QueueSkeletonRows rows={3} />
-          ) : rows.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No activity yet — file the first ticket to light up this board.</p>
+          ) : (incidents || []).length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No activity yet — file the first ticket to light up this board.
+            </p>
           ) : (
             <div className="mt-4 flex h-36 items-end gap-3" role="img" aria-label="Records by state">
               {states.map((x) => (
                 <div key={x.s} className="flex flex-1 flex-col items-center gap-1.5">
-                  <span className="font-ticket text-xs font-bold"><NumberPop value={x.n} /></span>
+                  <span className="font-ticket text-xs font-bold">
+                    <NumberPop value={x.n} />
+                  </span>
                   <span
                     className="w-full rounded-t-md bg-primary/70"
-                    style={{ height: `${Math.max(6, (x.n / max) * 110)}px`, transition: "height var(--duration-slow) var(--ease-smooth-out)" }}
+                    style={{
+                      height: `${Math.max(6, (x.n / maxState) * 110)}px`,
+                      transition: "height var(--duration-slow) var(--ease-smooth-out)",
+                    }}
                   />
                   <StateBadge state={x.s} />
                 </div>
@@ -118,28 +263,35 @@ export default function OverviewPage() {
           )}
         </div>
 
+        {/* Bottom 3-Column Panels */}
         <div className="grid gap-3 lg:grid-cols-3">
+          {/* Top Categories */}
           <div className="deck-panel p-4">
-            <h2 className="font-display text-base font-semibold">Top categories</h2>
-            <p className="text-xs text-muted-foreground">Where open demand concentrates</p>
+            <h2 className="font-display text-base font-semibold">Top Demand Categories</h2>
+            <p className="text-xs text-muted-foreground">Concentration of open work</p>
             <div className="mt-3 space-y-2">
               {cats.length === 0 && <p className="text-sm text-muted-foreground">No open demand.</p>}
               {cats.map(([c, n]) => (
                 <div key={c} className="flex items-center gap-2 text-sm">
                   <span className="w-24 shrink-0 truncate capitalize">{c}</span>
                   <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                    <span className="block h-full rounded-full bg-primary" style={{ width: `${Math.min(100, n * 25)}%` }} />
+                    <span
+                      className="block h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min(100, n * 25)}%` }}
+                    />
                   </span>
                   <span className="font-ticket text-xs font-bold">{n}</span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Recent Tickets */}
           <div className="deck-panel p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-display text-base font-semibold">Recent tickets</h2>
-                <p className="text-xs text-muted-foreground">Latest across the queue</p>
+                <h2 className="font-display text-base font-semibold">Recent Incidents</h2>
+                <p className="text-xs text-muted-foreground">Latest filings across operations</p>
               </div>
               <TransitionLink href="/workspace/incident" className="text-xs font-bold text-primary hover:underline">
                 View all →
@@ -148,22 +300,34 @@ export default function OverviewPage() {
             <div className="mt-3 space-y-1.5">
               {recent.length === 0 && <p className="text-sm text-muted-foreground">Nothing filed yet.</p>}
               {recent.map((r) => (
-                <TransitionLink key={r.id} href={`/workspace/incident/${r.id}`} direction="nav-forward" className="deck-row flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-1.5">
+                <TransitionLink
+                  key={r.id}
+                  href={`/workspace/incident/${r.id}`}
+                  direction="nav-forward"
+                  className="deck-row flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-1.5"
+                >
                   <PriorityBadge priority={r.priority} />
                   <span className="min-w-0 flex-1 truncate text-[13px]">{r.short_description}</span>
                 </TransitionLink>
               ))}
             </div>
           </div>
+
+          {/* Assignment Groups Telemetry */}
           <div className="deck-panel flex flex-col p-4">
-            <h2 className="font-display text-base font-semibold">Assignment groups</h2>
-            <p className="text-xs text-muted-foreground">Who owns the work</p>
+            <h2 className="font-display text-base font-semibold">Assignment Groups</h2>
+            <p className="text-xs text-muted-foreground">Active fulfiller routing queues</p>
             <div className="mt-3 space-y-1.5 text-sm">
-              {["Service Desk", "Network Tier 2", "Database Admin"].map((g) => (
-                <p key={g} className="flex items-center justify-between rounded-md bg-muted/60 px-2.5 py-1.5">
-                  {g}
-                  <span className="font-ticket text-xs text-muted-foreground">armed</span>
-                </p>
+              {[
+                { name: "Service Desk", role: "Tier 1 Intake" },
+                { name: "Network Tier 2", role: "Infrastructure" },
+                { name: "Database Admin", role: "Data Platforms" },
+                { name: "CAB Approval", role: "Change Governance" },
+              ].map((g) => (
+                <div key={g.name} className="flex items-center justify-between rounded-md bg-muted/60 px-2.5 py-1.5">
+                  <span className="font-medium text-xs">{g.name}</span>
+                  <span className="font-ticket text-[11px] text-muted-foreground">{g.role}</span>
+                </div>
               ))}
             </div>
             <TransitionLink href="/settings" className="mt-auto pt-3 text-xs font-bold text-primary hover:underline">

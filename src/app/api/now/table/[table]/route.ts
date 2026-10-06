@@ -75,9 +75,25 @@ export async function POST(req: Request, { params }: { params: { table: string }
         RETURNING *`;
       return NextResponse.json({ result: relRows[0] }, { status: 201 });
     }
+    if (table === "kb_knowledge") {
+      const nextNum = await generateNextNumber("KB");
+      const kbRows: any = await sql`
+        INSERT INTO kb_knowledge (number, short_description, text, category, workflow_state, author_id, source_task_id)
+        VALUES (${nextNum}, ${body.short_description || "Untitled Article"}, ${body.text || ""}, ${body.category || "General"}, ${body.workflow_state || "published"}, ${userId ? userId : null}::uuid, ${body.source_task_id ? `${body.source_task_id}::uuid` : null})
+        RETURNING *`;
+      return NextResponse.json({ result: kbRows[0] }, { status: 201 });
+    }
+    if (table === "sc_cat_item") {
+      const vars = body.variables ? JSON.stringify(body.variables) : "[]";
+      const itemRows: any = await sql`
+        INSERT INTO sc_cat_item (name, short_description, category, icon, variables, active)
+        VALUES (${body.name || "Untitled Item"}, ${body.short_description || null}, ${body.category || "Hardware"}, ${body.icon || "Package"}, ${vars}::jsonb, ${body.active !== undefined ? Boolean(body.active) : true})
+        RETURNING *`;
+      return NextResponse.json({ result: itemRows[0] }, { status: 201 });
+    }
 
     if (!["incident", "change_request", "problem", "task"].includes(table)) {
-      return NextResponse.json({ error: "POST only supported for task hierarchy and cmdb in MVP" }, { status: 400 });
+      return NextResponse.json({ error: "POST only supported for task hierarchy, cmdb, knowledge, and catalog in MVP" }, { status: 400 });
     }
     const impact = Number(body.impact ?? 3);
     const urgency = Number(body.urgency ?? 3);

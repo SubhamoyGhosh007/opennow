@@ -6,6 +6,7 @@ import { StateBadge, PriorityBadge, Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ActivityFeed } from "@/components/deck/activity-feed";
+import { AssignmentPanel } from "@/components/deck/assignment-panel";
 import { Accordion } from "@/components/motion/accordion";
 import { Modal } from "@/components/ui/dialog";
 import { NumberPop } from "@/components/motion/micro";
@@ -241,7 +242,17 @@ export default function ChangeDetailPage({ params }: { params: { id: string } })
             </Accordion>
           </div>
 
-          <ActivityFeed journals={rec.journals} taskId={params.id} table="change_request" onUpdate={load} />
+          <div className="space-y-4">
+            <AssignmentPanel
+              table="change_request"
+              taskId={params.id}
+              assignedTo={rec.assigned_to}
+              assignmentGroup={rec.assignment_group}
+              isClosed={rec.state >= 7}
+              onUpdate={load}
+            />
+            <ActivityFeed journals={rec.journals} taskId={params.id} table="change_request" onUpdate={load} />
+          </div>
         </div>
       )}
 

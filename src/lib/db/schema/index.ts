@@ -4,3 +4,5 @@ export * from "./incident";
 export * from "./journal";
 export * from "./sla";
 export * from "./cmdb";
+export * from "./knowledge";
+export * from "./catalog";

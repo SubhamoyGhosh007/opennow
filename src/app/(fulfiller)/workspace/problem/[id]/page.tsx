@@ -5,6 +5,7 @@ import { WorkspaceShell } from "@/components/deck/workspace-shell";
 import { StateBadge, PriorityBadge, Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ActivityFeed } from "@/components/deck/activity-feed";
+import { AssignmentPanel } from "@/components/deck/assignment-panel";
 import { Accordion } from "@/components/motion/accordion";
 import { Modal } from "@/components/ui/dialog";
 import { NumberPop } from "@/components/motion/micro";
@@ -85,6 +86,35 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
       "Root cause & workaround saved"
     );
     setSavingAnalysis(false);
+  };
+
+  const publishToKb = async () => {
+    if (!analysis.workaround && !analysis.root_cause) {
+      toast({ title: "Validation error", body: "Document a workaround or root cause first" });
+      return;
+    }
+    try {
+      const bodyText = `### Problem Reference\nGenerated from **${rec.number}**: ${rec.short_description}\n\n### Root Cause Analysis\n${analysis.root_cause || "Under active investigation."}\n\n### Workaround / Temporary Mitigation\n${analysis.workaround || "No current workaround."}`;
+      const res = await fetch("/api/now/table/kb_knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          short_description: `Workaround: ${rec.short_description}`,
+          category: "General",
+          text: bodyText,
+          source_task_id: rec.id,
+          workflow_state: "published",
+        }),
+      });
+      if (res.ok) {
+        const j = await res.json();
+        toast({ title: "KB Article Published", body: `Linked as ${j.result?.number}` });
+      } else {
+        toast({ title: "Failed to publish article" });
+      }
+    } catch (e: any) {
+      toast({ title: "Network error", body: e.message });
+    }
   };
 
   const applyState = async (next: number) => {
@@ -194,7 +224,15 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
                   </div>
 
                   {rec.state < 7 && (
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={publishToKb}
+                        title="Publish this workaround to the enterprise Knowledge Base"
+                      >
+                        Publish to Knowledge Base
+                      </Button>
                       <Button
                         size="sm"
                         variant="secondary"
@@ -217,8 +255,16 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
               />
             </div>
 
-            {/* Right Col: Problem Metadata */}
+            {/* Right Col: Routing & Problem Metadata */}
             <div className="space-y-4">
+              <AssignmentPanel
+                table="problem"
+                taskId={params.id}
+                assignedTo={rec.assigned_to}
+                assignmentGroup={rec.assignment_group}
+                isClosed={rec.state >= 7}
+                onUpdate={load}
+              />
               <div className="rounded-lg border bg-card p-4 space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Problem Metadata
