@@ -28,8 +28,8 @@ export default function CatalogPage() {
     <PortalShell title="Request catalog">
       <RevealText
         lines={[
-          <strong key="a" className="font-display text-2xl font-bold text-slate-900">Report an issue</strong>,
-          <span key="b" className="mt-1 text-sm text-slate-500">Urgency × impact sets priority automatically.</span>,
+          <strong key="a" className="font-display text-2xl font-bold text-foreground">Report an issue</strong>,
+          <span key="b" className="mt-1 text-[15px] text-muted-foreground">Urgency × impact sets priority automatically.</span>,
         ]}
       />
       <form
@@ -84,10 +84,10 @@ export default function CatalogPage() {
         )}
       >
         <div ref={wrapRef} className="t-input-wrap">
-          <div ref={boxRef} className="t-input rounded-lg border border-transparent">
+          <div ref={boxRef} className="t-input rounded-xl border border-transparent">
             <input
               {...register("short_description")}
-              className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--signal))]"
+              className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[hsl(var(--signal))]"
               placeholder="Short description"
             />
           </div>
@@ -97,22 +97,22 @@ export default function CatalogPage() {
         </div>
         <textarea
           {...register("description")}
-          className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--signal))]"
+          className="w-full rounded-md border border-input bg-transparent p-3 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[hsl(var(--signal))]"
           rows={4}
           placeholder="Describe the issue"
         />
         <div className="grid grid-cols-3 gap-2">
-          <select {...register("urgency")} className="rounded-lg border border-slate-300 bg-white p-2 text-sm" aria-label="Urgency">
+          <select {...register("urgency")} className="rounded-md border border-input bg-transparent p-2 text-[15px]" aria-label="Urgency">
             <option value="1">High urgency</option>
             <option value="2">Medium urgency</option>
             <option value="3">Low urgency</option>
           </select>
-          <select {...register("impact")} className="rounded-lg border border-slate-300 bg-white p-2 text-sm" aria-label="Impact">
+          <select {...register("impact")} className="rounded-md border border-input bg-transparent p-2 text-[15px]" aria-label="Impact">
             <option value="1">High impact</option>
             <option value="2">Medium impact</option>
             <option value="3">Low impact</option>
           </select>
-          <select {...register("category")} className="rounded-lg border border-slate-300 bg-white p-2 text-sm" aria-label="Category">
+          <select {...register("category")} className="rounded-md border border-input bg-transparent p-2 text-[15px]" aria-label="Category">
             <option value="software">Software</option>
             <option value="hardware">Hardware</option>
             <option value="network">Network</option>
@@ -120,14 +120,14 @@ export default function CatalogPage() {
           </select>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-10 flex-1 rounded-lg bg-slate-900 text-sm font-semibold text-white transition-colors hover:bg-slate-700">
+          <button className="h-10 flex-1 rounded-md bg-primary text-[15px] font-semibold text-primary-foreground transition-colors hover:brightness-110">
             File request
           </button>
           <SuccessCheck show={!!ticket} className="text-emerald-600" />
         </div>
         {ticket && (
-          <p className="font-ticket text-sm text-slate-600">
-            Last filed · <span className="font-bold text-slate-900">{ticket}</span>
+          <p className="font-ticket text-[15px] text-muted-foreground">
+            Last filed · <span className="font-bold text-foreground">{ticket}</span>
           </p>
         )}
       </form>

@@ -52,7 +52,7 @@ export function MovingBorderButton({
       <button
         type={type}
         onClick={onClick}
-        className="flex h-9 items-center gap-2 rounded-full bg-[#0d1428] px-5 text-sm font-semibold text-slate-100 transition-colors hover:bg-[#141d3a]"
+        className="flex h-9 items-center gap-2 rounded-full bg-[#0d1428] px-5 text-[15px] font-semibold text-slate-100 transition-colors hover:bg-[#141d3a]"
       >
         {children}
       </button>

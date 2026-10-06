@@ -20,9 +20,9 @@ export function Accordion({
   const [open, setOpen] = React.useState(defaultOpen);
   const panelId = React.useId();
   return (
-    <div className={cn("t-acc rounded-lg border border-border/70", className)} data-open={String(open)}>
+    <div className={cn("t-acc rounded-xl border border-border/70", className)} data-open={String(open)}>
       <button
-        className="t-acc-head flex w-full items-center justify-between gap-3 p-3 text-left text-sm font-medium"
+        className="t-acc-head flex w-full items-center justify-between gap-3 p-3 text-left text-[15px] font-medium"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}

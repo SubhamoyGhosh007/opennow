@@ -12,6 +12,8 @@ export const TABLE_MAP: Record<string, { base: string; className: string; prefix
   task: { base: "task", className: "task", prefix: "TASK" },
   cmdb_ci: { base: "cmdb_ci", className: "cmdb_ci", prefix: "" },
   sys_user: { base: "sys_user", className: "sys_user", prefix: "" },
+  contract_sla: { base: "contract_sla", className: "contract_sla", prefix: "" },
+  task_sla: { base: "task_sla", className: "task_sla", prefix: "" },
 };
 
 export async function getUserContext(req: Request): Promise<{ id: string; roles: string[] } | null> {

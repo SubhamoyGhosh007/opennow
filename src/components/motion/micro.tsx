@@ -77,7 +77,7 @@ export function SuccessCheck({ show, className }: { show: boolean; className?: s
 /** Shimmer status line — transitions-dev `t-shimmer` hooks (pure CSS). */
 export function ShimmerLine({ text, className }: { text: string; className?: string }) {
   return (
-    <span className={cn("t-shimmer text-sm", className)} data-text={text}>
+    <span className={cn("t-shimmer text-[15px]", className)} data-text={text}>
       {text}
     </span>
   );

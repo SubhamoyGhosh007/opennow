@@ -97,19 +97,19 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
     <WorkspaceShell title={rec ? rec.number : "Loading record…"} tab="incident">
       <button
         onClick={() => navigateWithTransition(router, "/workspace/incident", "nav-back")}
-        className="mb-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-3 flex items-center gap-1 text-[15px] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> Queue
       </button>
 
       {!rec ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-[15px] text-muted-foreground">Loading…</p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="deck-panel space-y-4 p-5">
             <div>
               {/* Shared-element target: same viewTransitionName as the queue row. */}
-              <p className="font-ticket text-lg font-bold" style={{ viewTransitionName: `ticket-${rec.id}` }}>
+              <p className="font-ticket text-2xl font-bold" style={{ viewTransitionName: `ticket-${rec.id}` }}>
                 {rec.number}
               </p>
               <h1 className="font-display mt-1 text-2xl font-semibold leading-tight">{rec.short_description}</h1>
@@ -119,7 +119,7 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            <p className="text-sm leading-relaxed text-muted-foreground">{rec.description || "No description."}</p>
+            <p className="text-[15px] leading-relaxed text-muted-foreground">{rec.description || "No description."}</p>
 
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-ticket text-[13px]">
               <div><dt className="text-muted-foreground">Impact</dt><dd><NumberPop value={rec.impact} /></dd></div>
@@ -132,7 +132,7 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
                 <Button
                   key={s.v}
                   size="sm"
-                  variant={s.v === 6 ? "signal" : "outline"}
+                  variant={s.v === 6 ? "default" : "outline"}
                   onClick={() => (s.v === 7 || s.v === 8 ? setConfirm(s.v) : applyState(s.v))}
                 >
                   {s.label}
@@ -142,7 +142,7 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
             </div>
 
             <Accordion title="Closure & diagnostics" meta={<StateBadge state={rec.state} />}>
-              <dl className="space-y-1.5 text-sm">
+              <dl className="space-y-2 text-[15px]">
                 <div className="flex justify-between"><dt className="text-muted-foreground">Close code</dt><dd>{rec.close_code || "—"}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted-foreground">Close notes</dt><dd className="max-w-[60%] text-right">{rec.close_notes || "—"}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted-foreground">Hold reason</dt><dd>{rec.hold_reason || "—"}</dd></div>
@@ -155,7 +155,7 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
                   <SlaMeter key={s.id} sla={s} />
                 ))}
                 {(rec.slas || []).length === 0 && (
-                  <p className="text-sm text-muted-foreground">No SLA clocks attached.</p>
+                  <p className="text-[15px] text-muted-foreground">No SLA clocks attached.</p>
                 )}
               </div>
             </Accordion>
@@ -166,30 +166,30 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
       )}
 
       <Modal open={confirm !== null} onOpenChange={(v) => !v && setConfirm(null)}>
-        <h2 className="font-display text-lg font-semibold">
+        <h2 className="font-display text-2xl font-semibold">
           {confirm === 7 ? "Close this incident?" : "Cancel this incident?"}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-[15px] text-muted-foreground">
           Closure is terminal — the record becomes read-only.
         </p>
         <div className="mt-4 space-y-3">
-          <label className="block text-sm">
+          <label className="block text-[15px]">
             <span className="mb-1 block text-muted-foreground">Close code</span>
             <Input value={closeCode} onChange={(e) => setCloseCode(e.target.value)} />
           </label>
-          <label className="block text-sm">
+          <label className="block text-[15px]">
             <span className="mb-1 block text-muted-foreground">Close notes</span>
             <textarea
               value={closeNotes}
               onChange={(e) => setCloseNotes(e.target.value)}
               rows={3}
-              className="w-full rounded-md border border-input bg-transparent p-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full rounded-md border border-input bg-transparent p-2 text-[15px] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="What was done?"
             />
           </label>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setConfirm(null)}>Keep open</Button>
-            <Button variant={confirm === 7 ? "signal" : "destructive"} onClick={() => confirm && applyState(confirm, { close_code: closeCode, close_notes: closeNotes })}>
+            <Button variant={confirm === 7 ? "default" : "destructive"} onClick={() => confirm && applyState(confirm, { close_code: closeCode, close_notes: closeNotes })}>
               Confirm
             </Button>
           </div>

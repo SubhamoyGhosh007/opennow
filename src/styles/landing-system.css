@@ -1,0 +1,298 @@
+/* OpenNow landing system — applied per the reference brief, original tokens.
+   Single geometric sans, white/mist foundation, navy ink, lime action signal. */
+
+.landing-system {
+  /* Display/body resolve to the global prompt fonts (Space Grotesk /
+     Plus Jakarta Sans) — no local override. */
+  --ls-bg: #ffffff;
+  --ls-mist: #f4f6f7;
+  --ls-ink: #0d2833;
+  --ls-muted: #667277;
+  --ls-lime: #c8ff00;
+  --ls-lime-deep: #9fd600;
+  --ls-limesoft: #eefbce;
+  --ls-line: rgba(13, 40, 51, 0.12);
+  --ls-navy: #0d2833;
+  --ls-navy-card: #123038;
+  background: var(--ls-bg);
+  color: var(--ls-ink);
+  font-family: var(--font-body);
+  /* Sliding-tabs pill retuned to the system */
+  --tabs-bar-bg: #e7ecee;
+  --tabs-pill-bg: var(--ls-lime);
+  --tabs-text-active: var(--ls-ink);
+  --tabs-text-muted: var(--ls-muted);
+}
+
+.landing-system .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Eyebrow labels */
+.ls-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ls-muted);
+}
+.ls-eyebrow-lime {
+  display: inline-block;
+  background: var(--ls-lime);
+  color: var(--ls-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+/* Buttons — one dominant CTA per section */
+.ls-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ls-lime);
+  color: var(--ls-ink);
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 999px;
+  padding: 12px 24px;
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out);
+}
+.ls-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -12px rgba(13, 40, 51, 0.45);
+}
+.ls-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ls-ink);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 999px;
+  padding: 12px 24px;
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out);
+}
+.ls-btn-dark:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -12px rgba(13, 40, 51, 0.5);
+}
+.ls-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 999px;
+  padding: 12px 24px;
+  transition: background var(--duration-fast) var(--ease-smooth-out);
+}
+.ls-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Panels */
+.ls-card {
+  background: #ffffff;
+  border: 1px solid var(--ls-line);
+  border-radius: 20px;
+  box-shadow: 0 20px 48px -28px rgba(13, 40, 51, 0.25);
+}
+.ls-panel-soft {
+  background: var(--ls-mist);
+  border-radius: 24px;
+}
+.ls-section-mist {
+  background: var(--ls-mist);
+}
+
+/* Circular lime play / expand controls */
+.ls-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: var(--ls-lime);
+  color: var(--ls-ink);
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+}
+.ls-play:hover {
+  transform: scale(1.06);
+}
+
+/* FAQ rows: lime circular expand control */
+.landing-system .t-acc-chevron {
+  background: var(--ls-lime);
+  border-radius: 999px;
+  padding: 6px;
+  color: var(--ls-ink);
+}
+
+/* Metric cards: thin lime rule */
+.ls-metric {
+  border-top: 3px solid var(--ls-lime);
+}
+
+/* Comparison table emphasis */
+.ls-col-us {
+  background: var(--ls-navy);
+  color: #ffffff;
+}
+.ls-savings {
+  background: var(--ls-limesoft);
+}
+
+/* Final CTA glow */
+.ls-cta-glow {
+  background:
+    radial-gradient(ellipse 55% 65% at 50% 110%, rgba(200, 255, 0, 0.16), transparent 70%),
+    var(--ls-navy);
+}
+
+/* Forthcoming-capability pills */
+.ls-coming-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--ls-line);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ls-coming-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ls-lime-deep);
+}
+
+/* Carousel track */
+.ls-track {
+  display: flex;
+  transition: transform var(--duration-slow) var(--ease-smooth-out);
+}
+
+/* Abstract product visual */
+.ls-blob {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(200, 255, 0, 0.5), transparent 55%),
+    radial-gradient(circle at 75% 70%, rgba(13, 40, 51, 0.16), transparent 60%),
+    linear-gradient(135deg, #eef4f2, #e2ecea);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ls-track {
+    transition: none !important;
+  }
+  .ls-btn:hover,
+  .ls-btn-dark:hover,
+  .ls-play:hover {
+    transform: none;
+  }
+}
+
+/* Scroll motion — elements opt in with data-rv; page observes and adds .is-shown.
+   Tuned to the reference restraint: 12px rise, opacity only, no blur. */
+[data-rv] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--duration-slow) var(--ease-smooth-out),
+    transform var(--duration-slow) var(--ease-smooth-out);
+  will-change: opacity, transform;
+}
+[data-rv].is-shown {
+  opacity: 1;
+  transform: none;
+}
+[data-rv-delay="1"] { transition-delay: 70ms; }
+[data-rv-delay="2"] { transition-delay: 140ms; }
+[data-rv-delay="3"] { transition-delay: 210ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rv] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+}
+/* App interior runs inside this scope: pin notes to their light treatment
+   (the dark override in globals would otherwise win via the <html> class). */
+.landing-system .note-internal {
+  border: 1px solid rgba(217, 164, 65, 0.55);
+  background: #fef6e0;
+  color: #713f12;
+  border-radius: 12px;
+}
+.landing-system .note-public {
+  border: 1px solid var(--ls-line);
+  background: #ffffff;
+  color: var(--ls-ink);
+  border-radius: 12px;
+}
+/* Masked line whip + per-letter flip — hero entrance language */
+.whip-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.whip-line { display: block; animation: whip-in-up 700ms var(--ease-smooth-out) both; }
+@keyframes whip-in-up { from { transform: translateY(110%); } to { transform: translateY(0); } }
+.flip-letter {
+  display: inline-block;
+  animation: flip-word-letter 480ms var(--ease-smooth-out) both;
+  will-change: opacity, transform, filter;
+}
+@keyframes flip-word-letter {
+  from { opacity: 0; filter: blur(8px); transform: translateY(10px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+/* Sheen sweep on primary CTA hover */
+.ls-btn { position: relative; overflow: hidden; isolation: isolate; }
+.ls-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+.ls-btn:hover::after { animation: btn-sheen 800ms ease; }
+@keyframes btn-sheen { to { transform: translateX(130%); } }
+
+/* Nav link underline grow */
+.sysnav-link { position: relative; }
+.sysnav-link::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ls-lime-deep);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+}
+.sysnav-link:hover::after { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .whip-line, .flip-letter { animation: none !important; }
+  .ls-btn:hover::after { animation: none !important; }
+  .sysnav-link::after { transition: none !important; }
+}

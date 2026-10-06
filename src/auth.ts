@@ -60,12 +60,12 @@ providers.push(
       password: { label: "Password", type: "password" },
     },
     async authorize(creds) {
-      const username = (creds?.username as string) || "";
+      const login = ((creds?.username as string) || "").trim();
       const password = (creds?.password as string) || "";
-      if (!username || !password) return null;
+      if (!login || !password) return null;
       const sql = getSql();
       try {
-        const users = await sql`SELECT * FROM sys_user WHERE user_name = ${username} AND active = true LIMIT 1`;
+        const users = await sql`SELECT * FROM sys_user WHERE (user_name = ${login} OR email = ${login}) AND active = true LIMIT 1`;
         if (users.length === 0) return null;
         const u = users[0] as any;
         const ok = await bcrypt.compare(password, u.password_hash);

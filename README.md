@@ -92,8 +92,8 @@ See `.env.example`. Restart `npm run dev` after adding keys.
 |---|---|
 | Anyone, no session (`/` shows sign-in prompts for live sections) | `/`, `/login` |
 | Signed-out pages → `/login`; session-less API → `401` | everything else |
-| `employee` (any signed-in user) | `/catalog`, `/tickets` |
-| `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/*` |
+| `employee` (any signed-in user) | `/`, `/workspace` (overview), `/catalog`, `/tickets`, `/settings` |
+| `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/incident`, `/workspace/change`, `/workspace/problem` |
 
 Table API routes additionally re-check the session server-side (`401` with no
 session). Roles live on the JWT (`token.roles`) and session (`session.user.roles`).

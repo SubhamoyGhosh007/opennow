@@ -12,7 +12,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     --primary: 223 100% 68%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 222 47% 11%;
     --secondary: 220 20% 93%;
     --secondary-foreground: 222 47% 18%;
     --muted: 220 20% 93%;
@@ -33,14 +33,14 @@
   }
 
   .dark {
-    /* ops-deck — deep ink navy */
+    /* ops-deck — deep ink navy, lime primary actions */
     --background: 229 55% 7%;
     --foreground: 220 33% 94%;
     --card: 230 42% 11%;
     --card-foreground: 220 33% 94%;
     --popover: 230 45% 13%;
     --popover-foreground: 220 33% 94%;
-    --primary: 223 100% 70%;
+    --primary: 75 100% 50%;
     --primary-foreground: 229 55% 8%;
     --secondary: 230 35% 16%;
     --secondary-foreground: 220 33% 92%;
@@ -61,6 +61,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
   }
   ::selection {
     background: rgba(91, 140, 255, 0.32);
@@ -101,12 +102,12 @@
   }
   /* work-notes gold tint (kept from spec, tuned for both themes) */
   .note-internal {
-    @apply rounded-lg border border-amber-300/60 bg-amber-50 text-amber-950;
+    @apply rounded-xl border border-amber-300/60 bg-amber-50 text-amber-950;
   }
   .dark .note-internal {
     @apply border-amber-400/25 bg-amber-400/10 text-amber-100;
   }
   .note-public {
-    @apply rounded-lg border bg-card text-card-foreground;
+    @apply rounded-xl border bg-card text-card-foreground;
   }
 }

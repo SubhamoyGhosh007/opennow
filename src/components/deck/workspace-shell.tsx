@@ -10,7 +10,7 @@ export function WorkspaceShell({
   children,
 }: {
   title: string;
-  tab: string;
+  tab?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -18,25 +18,27 @@ export function WorkspaceShell({
     <DeckShell
       title={title}
       context={
-        <SlidingTabs
-          ariaLabel="Record class"
-          value={tab}
-          onChange={(v) => {
-            // Lateral navigation: no directional slide (no spatial depth),
-            // so push without transition types — content reveals animate.
-            const map: Record<string, string> = {
-              incident: "/workspace/incident",
-              change: "/workspace/change",
-              problem: "/workspace/problem",
-            };
-            if (map[v]) startTransition(() => router.push(map[v]));
-          }}
-          options={[
-            { value: "incident", label: "Incidents" },
-            { value: "change", label: "Changes" },
-            { value: "problem", label: "Problems" },
-          ]}
-        />
+        tab ? (
+          <SlidingTabs
+            ariaLabel="Record class"
+            value={tab}
+            onChange={(v) => {
+              // Lateral navigation: no directional slide (no spatial depth),
+              // so push without transition types — content reveals animate.
+              const map: Record<string, string> = {
+                incident: "/workspace/incident",
+                change: "/workspace/change",
+                problem: "/workspace/problem",
+              };
+              if (map[v]) startTransition(() => router.push(map[v]));
+            }}
+            options={[
+              { value: "incident", label: "Incidents" },
+              { value: "change", label: "Changes" },
+              { value: "problem", label: "Problems" },
+            ]}
+          />
+        ) : undefined
       }
     >
       {children}

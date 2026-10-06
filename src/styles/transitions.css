@@ -403,7 +403,8 @@
   translate: var(--tt-x, 0px) 0;
   scale: var(--tt-scale);
   transform-origin: 50% 100%;
-  padding: 8px 12px;
+  
+
   border-radius: 8px;
   background: var(--tt-bg);
   color: var(--tt-fg);

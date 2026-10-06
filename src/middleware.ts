@@ -1,22 +1,27 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtDecrypt } from "jose";
+import { getToken } from "next-auth/jwt";
 import { gateForRequest } from "@/lib/security/gates";
 
 /**
- * Edge-safe session gate. Auth.js v5 encrypts its JWT session cookie (JWE),
- * so we decrypt it directly with AUTH_SECRET instead of importing the
- * Node-side auth module (postgres/bcrypt) into the Edge runtime.
+ * Edge-safe session gate. Auth.js v5 encrypts its JWT session cookie (JWE)
+ * with an HKDF-derived key, so we read it via Auth.js's own getToken instead
+ * of decrypting by hand (raw AUTH_SECRET bytes do NOT decrypt it).
  */
 async function rolesFromRequest(req: NextRequest): Promise<string[] | null> {
-  const cookie =
-    req.cookies.get("__Secure-authjs.session-token") ?? req.cookies.get("authjs.session-token");
-  if (!cookie?.value || !process.env.AUTH_SECRET) return null;
+  if (!process.env.AUTH_SECRET) return null;
   try {
-    const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
-    const { payload } = await jwtDecrypt(cookie.value, secret);
-    const roles = (payload as any).roles;
-    return Array.isArray(roles) ? roles : null;
+    const token =
+      (await getToken({ req: req as any, secret: process.env.AUTH_SECRET, salt: "authjs.session-token" })) ??
+      (await getToken({
+        req: req as any,
+        secret: process.env.AUTH_SECRET,
+        cookieName: "__Secure-authjs.session-token",
+        salt: "__Secure-authjs.session-token",
+      }));
+    if (!token) return null;
+    const roles = (token as any).roles;
+    return Array.isArray(roles) ? roles : [];
   } catch {
     return null;
   }
@@ -30,11 +35,11 @@ export async function middleware(req: NextRequest) {
 
   const roles = await rolesFromRequest(req);
 
-  // The gate itself must stay public: guests see it, signed-in users pass through.
-  if (pathname === "/login") {
+  // The gates themselves stay public: guests see them, signed-in users pass through.
+  if (pathname === "/login" || pathname === "/register") {
     if (!roles) return NextResponse.next();
     const to = req.nextUrl.searchParams.get("callbackUrl");
-    const safe = to && to.startsWith("/") && !to.startsWith("//") && to !== "/login";
+    const safe = to && to.startsWith("/") && !to.startsWith("//") && to !== "/login" && to !== "/register";
     const url = req.nextUrl.clone();
     url.pathname = safe ? (to as string) : "/workspace/incident";
     url.search = "";

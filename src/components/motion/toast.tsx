@@ -41,12 +41,12 @@ function ToastCard({ toast }: { toast: Toast }) {
   return (
     <div
       className={cn(
-        "t-toast pointer-events-auto rounded-lg border border-border bg-popover p-3 text-sm text-popover-foreground shadow-xl",
+        "t-toast pointer-events-auto rounded-xl border border-border bg-popover p-3 text-[15px] text-popover-foreground shadow-xl",
         open && "is-open"
       )}
     >
       <p className="font-semibold">{toast.title}</p>
-      {toast.body && <p className="mt-0.5 text-muted-foreground">{toast.body}</p>}
+      {toast.body && <p className="mt-1 text-muted-foreground">{toast.body}</p>}
     </div>
   );
 }

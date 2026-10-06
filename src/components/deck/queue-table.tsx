@@ -7,7 +7,7 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Search, X } from "lucide-react";
+import { Search, X, LayoutGrid, List, Plus } from "lucide-react";
 import { StateBadge, PriorityBadge } from "@/components/ui/badge";
 import { NumberPop } from "@/components/motion/micro";
 import { SlidingTabs } from "@/components/motion/sliding-tabs";
@@ -33,6 +33,8 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
   const [loading, setLoading] = React.useState(true);
   const [query, setQuery] = React.useState("");
   const [preset, setPreset] = React.useState("all");
+  const [sort, setSort] = React.useState<"newest" | "oldest" | "priority">("newest");
+  const [view, setView] = React.useState<"basic" | "detailed">("basic");
 
   const load = React.useCallback(
     (q: string) => {
@@ -90,11 +92,31 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
           </span>
         ),
       }),
+      col.display({
+        id: "description",
+        header: "Detail",
+        cell: (c) => (
+          <span className="line-clamp-1 max-w-[320px] text-muted-foreground">{(c.row.original as any).description || "—"}</span>
+        ),
+      }),
     ],
     [table]
   );
 
-  const t = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
+  const sorted = React.useMemo(() => {
+    const rows = [...data];
+    if (sort === "oldest") rows.sort((a, b) => +new Date(a.sys_created_at) - +new Date(b.sys_created_at));
+    else if (sort === "priority") rows.sort((a, b) => a.priority - b.priority);
+    else rows.sort((a, b) => +new Date(b.sys_created_at) - +new Date(a.sys_created_at));
+    return rows;
+  }, [data, sort]);
+
+  const visibleCols = React.useMemo(
+    () => (view === "basic" ? columns.filter((c: any) => c.id !== "description") : columns),
+    [columns, view]
+  );
+
+  const t = useReactTable({ data: sorted, columns: visibleCols as any, getCoreRowModel: getCoreRowModel() });
 
   return (
     <div className="space-y-4">
@@ -116,12 +138,12 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
             load(query);
           }}
         >
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="sysparm_query — priority=1^active=true"
-            className="t-input h-9 w-full rounded-md border border-input bg-transparent pl-8 pr-8 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="t-input h-9 w-full rounded-md border border-input bg-transparent pl-8 pr-8 text-[15px] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {query && (
             <button
@@ -150,23 +172,69 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
         )}
       </p>
 
+      {!loading && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-xs text-muted-foreground" htmlFor={`sort-${table}`}>
+            Sort
+          </label>
+          <select
+            id={`sort-${table}`}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as any)}
+            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="priority">Highest priority</option>
+          </select>
+          <div className="ml-auto flex rounded-md border border-input p-0.5" role="group" aria-label="Density">
+            {(
+              [
+                { v: "basic", label: "Basic", Icon: LayoutGrid },
+                { v: "detailed", label: "Detailed", Icon: List },
+              ] as const
+            ).map((o) => (
+              <button
+                key={o.v}
+                onClick={() => setView(o.v)}
+                aria-pressed={view === o.v}
+                className={cn(
+                  "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                  view === o.v ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <o.Icon className="h-3.5 w-3.5" /> {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <QueueSkeletonRows rows={7} />
       ) : data.length === 0 ? (
         <div className="deck-panel p-10 text-center">
-          <p className="font-display text-lg font-semibold">Queue clear</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            No records match this filter. Widen the query or file a new request from the catalog.
+          <p className="font-display text-2xl font-semibold">Queue clear</p>
+          <p className="mx-auto mt-1 max-w-sm text-[15px] text-muted-foreground">
+            {query || preset !== "all"
+              ? "No records match this filter. Widen the query to see the rest of the queue."
+              : "Nothing here yet. File the first request and it will land in this queue."}
           </p>
+          <TransitionLink
+            href="/catalog"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110"
+          >
+            <Plus className="h-4 w-4" /> New request
+          </TransitionLink>
         </div>
       ) : (
         <div className="deck-panel overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px]">
             <thead>
               {t.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className="border-b border-border text-left text-xs uppercase text-muted-foreground">
                   {hg.headers.map((h) => (
-                    <th key={h.id} className="px-3 py-2.5 font-medium">
+                    <th key={h.id} className="px-3 py-3 font-medium">
                       {flexRender(h.column.columnDef.header, h.getContext())}
                     </th>
                   ))}
@@ -177,7 +245,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
               {t.getRowModel().rows.map((r) => (
                 <tr key={r.id} className={cn("deck-row border-b border-border/50 last:border-0")}>
                   {r.getVisibleCells().map((c) => (
-                    <td key={c.id} className="px-3 py-2.5">
+                    <td key={c.id} className="px-3 py-3">
                       {flexRender(c.column.columnDef.cell, c.getContext())}
                     </td>
                   ))}

@@ -2,6 +2,8 @@
 import * as React from "react";
 import { signIn, getProviders, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight } from "lucide-react";
+import { SuccessCheck, ShimmerLine } from "@/components/motion/micro";
 import {
   AuthSplit,
   AuthLogo,
@@ -9,19 +11,9 @@ import {
   AuthInput,
   PasswordInput,
   MailIcon,
+  OrgIcon,
   OrDivider,
 } from "@/components/auth/auth-split";
-import { SuccessCheck, ShimmerLine } from "@/components/motion/micro";
-
-function revertAfterHold(wrap: HTMLElement | null, input: HTMLElement | null) {
-  if (!wrap || !input) return;
-  const cs = getComputedStyle(document.documentElement);
-  const hold = parseFloat(cs.getPropertyValue("--revert-hold")) || 3000;
-  setTimeout(() => {
-    wrap.classList.remove("is-error");
-    input.classList.remove("is-error");
-  }, hold);
-}
 
 function GoogleMark() {
   return (
@@ -50,24 +42,24 @@ const MARKS: Record<string, { label: string; Mark: () => JSX.Element }> = {
   "microsoft-entra-id": { label: "Continue with Microsoft", Mark: MicrosoftMark },
 };
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <React.Suspense>
-      <LoginForm />
+      <RegisterForm />
     </React.Suspense>
   );
 }
 
-function LoginForm() {
+function RegisterForm() {
+  const [organization, setOrganization] = React.useState("");
+  const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [failed, setFailed] = React.useState(false);
+  const [confirm, setConfirm] = React.useState("");
+  const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [done, setDone] = React.useState(false);
-  const [forgot, setForgot] = React.useState(false);
   const [oauth, setOauth] = React.useState<{ id: string; name: string }[]>([]);
-  const wrapRef = React.useRef<HTMLDivElement>(null);
-  const boxRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
@@ -88,35 +80,56 @@ function LoginForm() {
     if (status === "authenticated") router.replace(callbackUrl);
   }, [status, router, callbackUrl]);
 
-  const fail = () => {
-    const wrap = wrapRef.current;
-    const box = boxRef.current;
-    wrap?.classList.add("is-error");
-    box?.classList.add("is-error");
-    box?.classList.remove("is-shaking");
-    void box?.offsetWidth;
-    box?.classList.add("is-shaking");
-    setFailed(true);
-    revertAfterHold(wrap, box);
-  };
-
   const submit = async () => {
+    setError("");
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("Enter a valid work email.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password needs at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match — re-enter them.");
+      return;
+    }
     setBusy(true);
-    setFailed(false);
-    const res = await signIn("credentials", { username: email.trim(), password, redirect: false });
-    setBusy(false);
-    if (res?.error) {
-      fail();
-    } else {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password, name: name.trim(), organization: organization.trim() }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(j.error || "Could not create the account.");
+        setBusy(false);
+        return;
+      }
+      const login = await signIn("credentials", {
+        username: j.result.user_name,
+        password,
+        redirect: false,
+      });
+      setBusy(false);
+      if (login?.error) {
+        setError("Account created — please sign in with your new credentials.");
+        return;
+      }
       setDone(true);
       setTimeout(() => router.push(callbackUrl), 650);
+    } catch {
+      setBusy(false);
+      setError("Network error — try again.");
     }
   };
 
   return (
     <AuthSplit>
       <AuthLogo />
-      <h1 className="font-display mt-6 text-[32px] font-bold tracking-tight">Glad to have you back!</h1>
+      <h1 className="font-display mt-6 text-[32px] font-bold tracking-tight">Create your account</h1>
+      <p className="mt-1 text-[15px] text-[var(--ls-muted)]">Start your journey with OpenNow</p>
 
       <div className="mt-6 space-y-2.5">
         {oauth.map((p) => {
@@ -147,49 +160,59 @@ function LoginForm() {
           submit();
         }}
       >
-        <div ref={wrapRef} className="t-input-wrap space-y-4">
-          <div ref={boxRef} className="t-input space-y-4">
-            <AuthField label="Email">
-              <AuthInput
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                autoComplete="email"
-                icon={<MailIcon />}
-              />
-            </AuthField>
-            <AuthField label="Password">
-              <PasswordInput
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-              />
-            </AuthField>
-          </div>
-          <p className="t-error-msg text-xs font-medium text-red-700" role={failed ? "alert" : undefined}>
-            {failed ? "Email or password did not match — try again." : ""}
-          </p>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setForgot((f) => !f)}
-            className="text-[13px] font-medium text-[var(--ls-muted)] hover:text-[var(--ls-ink)]"
-          >
-            Forgot password?
-          </button>
-        </div>
-        {forgot && (
-          <p className="rounded-xl bg-[var(--ls-mist)] p-3 text-[13px] text-[var(--ls-muted)]">
-            Password resets are handled by your workspace admin — or sign in with Google or Microsoft instead.
-          </p>
-        )}
+        <AuthField label="Organization">
+          <AuthInput
+            value={organization}
+            onChange={(e) => setOrganization(e.target.value)}
+            placeholder="Acme Inc."
+            autoComplete="organization"
+            icon={<OrgIcon />}
+          />
+        </AuthField>
+        <AuthField label="Your name">
+          <AuthInput
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ada Lovelace"
+            autoComplete="name"
+            icon={<OrgIcon />}
+          />
+        </AuthField>
+        <AuthField label="Work email">
+          <AuthInput
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
+            autoComplete="email"
+            icon={<MailIcon />}
+          />
+        </AuthField>
+        <AuthField label="Password">
+          <PasswordInput
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Create a secure password"
+            autoComplete="new-password"
+          />
+        </AuthField>
+        <AuthField label="Confirm Password" error={error}>
+          <PasswordInput
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="Re-enter password"
+            autoComplete="new-password"
+          />
+        </AuthField>
 
         <button type="submit" disabled={busy || done} className="ls-btn h-12 w-full justify-center disabled:opacity-60">
-          {busy ? <ShimmerLine text="Verifying…" /> : done ? "Welcome back" : "Sign in"}
+          {busy ? (
+            <ShimmerLine text="Creating…" />
+          ) : done ? (
+            "Welcome aboard"
+          ) : (
+            <>Create account <ArrowRight className="h-4 w-4" /></>
+          )}
         </button>
         <span className="flex justify-center">
           <SuccessCheck show={done} />
@@ -197,13 +220,13 @@ function LoginForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-[var(--ls-muted)]">
-        Don&apos;t have an account?{" "}
-        <a href="/register" className="font-semibold text-[var(--ls-ink)] underline-offset-4 hover:underline">
-          Sign up
+        Already have an account?{" "}
+        <a href="/login" className="font-semibold text-[var(--ls-ink)] underline-offset-4 hover:underline">
+          Sign in
         </a>
       </p>
       <p className="mt-4 text-center text-xs leading-relaxed text-[var(--ls-muted)]">
-        By signing in, you agree to the Terms of Use, Privacy Notice, and Cookie Notice.
+        By continuing, you agree to our Terms and Privacy Policy
       </p>
     </AuthSplit>
   );

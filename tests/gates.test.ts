@@ -14,6 +14,10 @@ describe("route gates", () => {
       to: "/tickets",
     });
   });
+  it("the overview dashboard opens for every role", () => {
+    expect(gateForRequest("/workspace", ["employee"])).toEqual({ kind: "allow" });
+    expect(gateForRequest("/workspace", ["itil"])).toEqual({ kind: "allow" });
+  });
   it("itil roles pass the workspace gate", () => {
     expect(gateForRequest("/workspace/change", ["itil"])).toEqual({ kind: "allow" });
     expect(gateForRequest("/workspace/problem", ["itil_admin"])).toEqual({ kind: "allow" });
