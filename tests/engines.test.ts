@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculatePriority } from "@/lib/engines/priorityEngine";
-import { canTransition, IncidentState } from "@/lib/engines/stateEngine";
+import { canTransition, assertTransition, IncidentState, ProblemState, ChangeState } from "@/lib/engines/stateEngine";
 import { canWriteField, canReadField } from "@/lib/security/acl";
 import { parseSysparmQuery, buildWhereClause } from "@/lib/engines/queryParser";
 import { matchesCondition, businessMinutesToMs } from "@/lib/sla/evaluate";
@@ -11,10 +11,50 @@ describe("priority matrix", () => {
   it("impact=3 urgency=3 => priority 5", () => expect(calculatePriority(3, 3)).toBe(5));
 });
 
-describe("state machine", () => {
+describe("incident state machine", () => {
   it("New -> Closed is illegal", () => expect(canTransition(IncidentState.NEW, IncidentState.CLOSED)).toBe(false));
   it("New -> In Progress is legal", () => expect(canTransition(IncidentState.NEW, IncidentState.IN_PROGRESS)).toBe(true));
   it("Closed is terminal", () => expect(canTransition(IncidentState.CLOSED, IncidentState.IN_PROGRESS)).toBe(false));
+});
+
+describe("problem state machine", () => {
+  it("Open -> Investigation is legal", () => {
+    expect(canTransition(ProblemState.OPEN, ProblemState.INVESTIGATION, "problem")).toBe(true);
+  });
+  it("Investigation -> Known Error is legal", () => {
+    expect(canTransition(ProblemState.INVESTIGATION, ProblemState.KNOWN_ERROR, "problem")).toBe(true);
+  });
+  it("Known Error -> Resolved is legal", () => {
+    expect(canTransition(ProblemState.KNOWN_ERROR, ProblemState.RESOLVED, "problem")).toBe(true);
+  });
+  it("Resolved -> Closed is legal", () => {
+    expect(canTransition(ProblemState.RESOLVED, ProblemState.CLOSED, "problem")).toBe(true);
+  });
+  it("Closed is terminal and throws assertTransition", () => {
+    expect(canTransition(ProblemState.CLOSED, ProblemState.INVESTIGATION, "problem")).toBe(false);
+    expect(() => assertTransition(ProblemState.CLOSED, ProblemState.INVESTIGATION, "problem")).toThrow();
+  });
+});
+
+describe("change request state machine", () => {
+  it("New -> Assess is legal", () => {
+    expect(canTransition(ChangeState.NEW, ChangeState.ASSESS, "change_request")).toBe(true);
+  });
+  it("Assess -> Scheduled is legal", () => {
+    expect(canTransition(ChangeState.ASSESS, ChangeState.SCHEDULED, "change_request")).toBe(true);
+  });
+  it("Scheduled -> Implementing is legal", () => {
+    expect(canTransition(ChangeState.SCHEDULED, ChangeState.IMPLEMENTING, "change_request")).toBe(true);
+  });
+  it("Implementing -> Review is legal", () => {
+    expect(canTransition(ChangeState.IMPLEMENTING, ChangeState.REVIEW, "change_request")).toBe(true);
+  });
+  it("Review -> Closed is legal", () => {
+    expect(canTransition(ChangeState.REVIEW, ChangeState.CLOSED, "change_request")).toBe(true);
+  });
+  it("Direct New -> Closed is illegal", () => {
+    expect(canTransition(ChangeState.NEW, ChangeState.CLOSED, "change_request")).toBe(false);
+  });
 });
 
 describe("ACL", () => {

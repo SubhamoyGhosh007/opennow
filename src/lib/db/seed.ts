@@ -79,15 +79,36 @@ async function main() {
       ON CONFLICT DO NOTHING`;
   }
 
-  // CMDB sample
-  await sql`
-    INSERT INTO cmdb_ci (name, sys_class_name, ip_address, fqdn)
-    VALUES ('web-prod-01', 'cmdb_ci_server', '10.0.1.10', 'web-prod-01.corp.local')
-    ON CONFLICT DO NOTHING`;
-  await sql`
-    INSERT INTO cmdb_ci (name, sys_class_name, ip_address, fqdn)
-    VALUES ('db-prod-01', 'cmdb_ci_database', '10.0.1.20', 'db-prod-01.corp.local')
-    ON CONFLICT DO NOTHING`;
+  // CMDB sample with relations
+  const ciWeb = await sql`
+    INSERT INTO cmdb_ci (name, sys_class_name, operational_status, ip_address, fqdn)
+    VALUES ('web-prod-01', 'cmdb_ci_server', 'operational', '10.0.1.10', 'web-prod-01.corp.local')
+    ON CONFLICT DO NOTHING RETURNING id`;
+  const ciDb = await sql`
+    INSERT INTO cmdb_ci (name, sys_class_name, operational_status, ip_address, fqdn)
+    VALUES ('db-prod-01', 'cmdb_ci_database', 'operational', '10.0.1.20', 'db-prod-01.corp.local')
+    ON CONFLICT DO NOTHING RETURNING id`;
+  const ciApp = await sql`
+    INSERT INTO cmdb_ci (name, sys_class_name, operational_status, ip_address, fqdn)
+    VALUES ('portal-service-prod', 'cmdb_ci_service', 'operational', '10.0.1.5', 'portal.corp.local')
+    ON CONFLICT DO NOTHING RETURNING id`;
+
+  const webId = ciWeb[0]?.id || (await sql`SELECT id FROM cmdb_ci WHERE name = 'web-prod-01'`)[0]?.id;
+  const dbId = ciDb[0]?.id || (await sql`SELECT id FROM cmdb_ci WHERE name = 'db-prod-01'`)[0]?.id;
+  const appId = ciApp[0]?.id || (await sql`SELECT id FROM cmdb_ci WHERE name = 'portal-service-prod'`)[0]?.id;
+
+  if (appId && webId) {
+    await sql`
+      INSERT INTO cmdb_rel_ci (parent_id, child_id, relation_type)
+      VALUES (${appId}::uuid, ${webId}::uuid, 'Depends On')
+      ON CONFLICT DO NOTHING`;
+  }
+  if (webId && dbId) {
+    await sql`
+      INSERT INTO cmdb_rel_ci (parent_id, child_id, relation_type)
+      VALUES (${webId}::uuid, ${dbId}::uuid, 'Runs On')
+      ON CONFLICT DO NOTHING`;
+  }
 
   // Sample incident
   const taskRows = await sql`
@@ -96,8 +117,41 @@ async function main() {
     ON CONFLICT (number) DO NOTHING RETURNING id`;
   if (taskRows.length > 0) {
     await sql`
-      INSERT INTO incident (task_id, caller_id, category) VALUES (${taskRows[0].id}::uuid, ${userIds["abel.tuter"]}::uuid, 'software')
+      INSERT INTO incident (task_id, caller_id, category, cmdb_ci_id) VALUES (${taskRows[0].id}::uuid, ${userIds["abel.tuter"]}::uuid, 'software', ${appId ? `${appId}::uuid` : null})
       ON CONFLICT DO NOTHING`;
+    await sql`
+      INSERT INTO sys_journal_field (task_id, element, value, created_by)
+      VALUES (${taskRows[0].id}::uuid, 'comments', 'Initial ticket logged by employee.', ${userIds["abel.tuter"]}::uuid)`;
+  }
+
+  // Sample Change Request
+  const chgTask = await sql`
+    INSERT INTO task (number, sys_class_name, short_description, description, priority, urgency, impact, state, opened_by)
+    VALUES ('CHG0000001', 'change_request', 'Upgrade PostgreSQL cluster to v16.3', 'Apply maintenance minor update across database primary and read replicas.', 2, 2, 1, 2, ${userIds["itil.fulfiller"]}::uuid)
+    ON CONFLICT (number) DO NOTHING RETURNING id`;
+  if (chgTask.length > 0) {
+    await sql`
+      INSERT INTO change_request (task_id, type, risk, approval_state, cab_required, implementation_plan, backout_plan, test_plan)
+      VALUES (${chgTask[0].id}::uuid, 'normal', 2, 'requested', true, '1. Drain connections.\n2. Apply apt package updates.\n3. Verify replica replication lag.', 'Rollback to snapshot snap-pg-20261005.', 'Execute regression queries against staging pool.')
+      ON CONFLICT DO NOTHING`;
+    await sql`
+      INSERT INTO sys_journal_field (task_id, element, value, created_by)
+      VALUES (${chgTask[0].id}::uuid, 'work_notes', 'CAB review meeting scheduled for Thursday 2 PM.', ${userIds["itil.fulfiller"]}::uuid)`;
+  }
+
+  // Sample Problem
+  const prbTask = await sql`
+    INSERT INTO task (number, sys_class_name, short_description, description, priority, urgency, impact, state, opened_by)
+    VALUES ('PRB0000001', 'problem', 'Intermittent database connection pool timeouts', 'Applications experiencing connection exhaustion during morning peak load.', 2, 2, 1, 2, ${userIds["network.tech"]}::uuid)
+    ON CONFLICT (number) DO NOTHING RETURNING id`;
+  if (prbTask.length > 0) {
+    await sql`
+      INSERT INTO problem (task_id, root_cause, workaround, known_error)
+      VALUES (${prbTask[0].id}::uuid, 'Connection leak in legacy reporting worker background thread.', 'Restart background worker service every 12 hours.', true)
+      ON CONFLICT DO NOTHING`;
+    await sql`
+      INSERT INTO sys_journal_field (task_id, element, value, created_by)
+      VALUES (${prbTask[0].id}::uuid, 'work_notes', 'Identified unclosed socket in worker thread #4.', ${userIds["network.tech"]}::uuid)`;
   }
 
   console.log("Seed complete.");

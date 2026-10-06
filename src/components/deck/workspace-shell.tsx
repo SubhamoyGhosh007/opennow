@@ -29,6 +29,7 @@ export function WorkspaceShell({
                 incident: "/workspace/incident",
                 change: "/workspace/change",
                 problem: "/workspace/problem",
+                cmdb: "/workspace/cmdb",
               };
               if (map[v]) startTransition(() => router.push(map[v]));
             }}
@@ -36,6 +37,7 @@ export function WorkspaceShell({
               { value: "incident", label: "Incidents" },
               { value: "change", label: "Changes" },
               { value: "problem", label: "Problems" },
+              { value: "cmdb", label: "CMDB" },
             ]}
           />
         ) : undefined

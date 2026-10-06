@@ -62,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
     // State transition enforcement
     if (body.state && Number(body.state) !== rec.state) {
       try {
-        assertTransition(rec.state, Number(body.state));
+        assertTransition(rec.state, Number(body.state), table);
       } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 422 });
       }
@@ -94,8 +94,8 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
         sets.push(`active = true`);
       }
     }
-    if (body.assigned_to) sets.push(`assigned_to = ${esc(body.assigned_to)}::uuid`);
-    if (body.assignment_group) sets.push(`assignment_group = ${esc(body.assignment_group)}::uuid`);
+    if (body.assigned_to !== undefined) sets.push(`assigned_to = ${body.assigned_to ? `${esc(body.assigned_to)}::uuid` : "NULL"}`);
+    if (body.assignment_group !== undefined) sets.push(`assignment_group = ${body.assignment_group ? `${esc(body.assignment_group)}::uuid` : "NULL"}`);
 
     await sql.unsafe(`UPDATE task SET ${sets.join(", ")} WHERE id = '${id}'::uuid`);
 
@@ -106,7 +106,27 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
       if (body.close_code) extSets.push(`close_code = ${esc(body.close_code)}`);
       if (body.close_notes) extSets.push(`close_notes = ${esc(body.close_notes)}`);
       if (body.hold_reason !== undefined) extSets.push(`hold_reason = ${Number(body.hold_reason)}`);
+      if (body.cmdb_ci_id !== undefined) extSets.push(`cmdb_ci_id = ${body.cmdb_ci_id ? `${esc(body.cmdb_ci_id)}::uuid` : "NULL"}`);
       if (extSets.length) await sql.unsafe(`UPDATE incident SET ${extSets.join(", ")} WHERE task_id = '${id}'::uuid`);
+    } else if (table === "problem") {
+      const extSets: string[] = [];
+      if (body.root_cause !== undefined) extSets.push(`root_cause = ${esc(body.root_cause)}`);
+      if (body.workaround !== undefined) extSets.push(`workaround = ${esc(body.workaround)}`);
+      if (body.known_error !== undefined) extSets.push(`known_error = ${Boolean(body.known_error)}`);
+      if (body.confirmed_at !== undefined) extSets.push(`confirmed_at = ${body.confirmed_at ? `${esc(body.confirmed_at)}::timestamptz` : "NULL"}`);
+      if (extSets.length) await sql.unsafe(`UPDATE problem SET ${extSets.join(", ")} WHERE task_id = '${id}'::uuid`);
+    } else if (table === "change_request") {
+      const extSets: string[] = [];
+      if (body.approval_state !== undefined) extSets.push(`approval_state = ${esc(body.approval_state)}`);
+      if (body.type !== undefined) extSets.push(`type = ${esc(body.type)}`);
+      if (body.risk !== undefined) extSets.push(`risk = ${Number(body.risk)}`);
+      if (body.cab_required !== undefined) extSets.push(`cab_required = ${Boolean(body.cab_required)}`);
+      if (body.planned_start_date !== undefined) extSets.push(`planned_start_date = ${body.planned_start_date ? `${esc(body.planned_start_date)}::timestamptz` : "NULL"}`);
+      if (body.planned_end_date !== undefined) extSets.push(`planned_end_date = ${body.planned_end_date ? `${esc(body.planned_end_date)}::timestamptz` : "NULL"}`);
+      if (body.backout_plan !== undefined) extSets.push(`backout_plan = ${esc(body.backout_plan)}`);
+      if (body.test_plan !== undefined) extSets.push(`test_plan = ${esc(body.test_plan)}`);
+      if (body.implementation_plan !== undefined) extSets.push(`implementation_plan = ${esc(body.implementation_plan)}`);
+      if (extSets.length) await sql.unsafe(`UPDATE change_request SET ${extSets.join(", ")} WHERE task_id = '${id}'::uuid`);
     }
 
     // Journals with ACL
@@ -138,9 +158,17 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
       }
     } catch {}
 
-    const finalRows: any = await sql`SELECT * FROM task WHERE id = ${id}::uuid`;
-    return NextResponse.json({ result: finalRows[0] });
+    // Return the full merged record with journals & slas
+    const ext = TABLE_MAP[table]?.ext;
+    const fullRows: any = ext
+      ? await sql`SELECT t.*, e.* FROM task t LEFT JOIN ${sql(ext)} e ON e.task_id = t.id WHERE t.id = ${id}::uuid LIMIT 1`
+      : await sql`SELECT * FROM task WHERE id = ${id}::uuid LIMIT 1`;
+    const journals: any = await sql`SELECT * FROM sys_journal_field WHERE task_id = ${id}::uuid ORDER BY sys_created_at ASC`;
+    const slas: any = await sql`SELECT s.*, c.name as sla_name FROM task_sla s JOIN contract_sla c ON c.id = s.sla_definition_id WHERE s.task_id = ${id}::uuid`;
+
+    return NextResponse.json({ result: { ...(fullRows[0] || {}), journals, slas } });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+

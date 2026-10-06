@@ -16,6 +16,8 @@ const badgeVariants = cva(
         p3: "border-amber-400/30 bg-amber-400/10 text-amber-300",
         p4: "border-slate-400/30 bg-slate-400/10 text-slate-300",
         p5: "border-slate-400/20 bg-transparent text-slate-400",
+        signal: "border-[#c8ff00]/40 bg-[#c8ff00]/15 text-[#c8ff00]",
+        warning: "border-amber-400/40 bg-amber-400/15 text-amber-300",
         stateNew: "border-sky-400/40 bg-sky-500/15 text-sky-300",
         stateProgress: "border-indigo-400/40 bg-indigo-500/15 text-indigo-300",
         stateHold: "border-amber-400/40 bg-amber-400/15 text-amber-300",

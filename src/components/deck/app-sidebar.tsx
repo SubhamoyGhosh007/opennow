@@ -8,6 +8,7 @@ import {
   FolderKanban,
   TicketCheck,
   PlusCircle,
+  Database,
   Users,
   Settings,
   ChevronDown,
@@ -37,6 +38,7 @@ const GROUPS: Group[] = [
       { href: "/workspace/incident", label: "Incidents", icon: Inbox },
       { href: "/workspace/change", label: "Changes", icon: FolderKanban },
       { href: "/workspace/problem", label: "Problems", icon: TicketCheck },
+      { href: "/workspace/cmdb", label: "CMDB", icon: Database },
     ],
   },
   {

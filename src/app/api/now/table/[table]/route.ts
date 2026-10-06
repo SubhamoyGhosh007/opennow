@@ -61,8 +61,23 @@ export async function POST(req: Request, { params }: { params: { table: string }
   const sql = getSql();
   const userId = ctx.id;
   try {
+    if (table === "cmdb_ci") {
+      const ciRows: any = await sql`
+        INSERT INTO cmdb_ci (name, sys_class_name, operational_status, ip_address, fqdn)
+        VALUES (${body.name || "Untitled CI"}, ${body.sys_class_name || "service"}, ${body.operational_status || "operational"}, ${body.ip_address || null}, ${body.fqdn || null})
+        RETURNING *`;
+      return NextResponse.json({ result: ciRows[0] }, { status: 201 });
+    }
+    if (table === "cmdb_rel_ci") {
+      const relRows: any = await sql`
+        INSERT INTO cmdb_rel_ci (parent_id, child_id, relation_type)
+        VALUES (${body.parent_id}::uuid, ${body.child_id}::uuid, ${body.relation_type || "Depends On"})
+        RETURNING *`;
+      return NextResponse.json({ result: relRows[0] }, { status: 201 });
+    }
+
     if (!["incident", "change_request", "problem", "task"].includes(table)) {
-      return NextResponse.json({ error: "POST only supported for task hierarchy in MVP" }, { status: 400 });
+      return NextResponse.json({ error: "POST only supported for task hierarchy and cmdb in MVP" }, { status: 400 });
     }
     const impact = Number(body.impact ?? 3);
     const urgency = Number(body.urgency ?? 3);

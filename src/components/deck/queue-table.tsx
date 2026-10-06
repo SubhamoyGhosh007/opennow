@@ -13,6 +13,10 @@ import { NumberPop } from "@/components/motion/micro";
 import { SlidingTabs } from "@/components/motion/sliding-tabs";
 import { TransitionLink } from "@/components/motion/nav-transition";
 import { QueueSkeletonRows } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/motion/toast";
 import { cn } from "@/lib/utils";
 
 const col = createColumnHelper<any>();
@@ -35,6 +39,22 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
   const [preset, setPreset] = React.useState("all");
   const [sort, setSort] = React.useState<"newest" | "oldest" | "priority">("newest");
   const [view, setView] = React.useState<"basic" | "detailed">("basic");
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [form, setForm] = React.useState({
+    short_description: "",
+    description: "",
+    urgency: 3,
+    impact: 3,
+    category: "inquiry",
+    type: "normal",
+    risk: 3,
+    implementation_plan: "",
+    workaround: "",
+    root_cause: "",
+    known_error: false,
+  });
+  const toast = useToast();
 
   const load = React.useCallback(
     (q: string) => {
@@ -118,6 +138,56 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
 
   const t = useReactTable({ data: sorted, columns: visibleCols as any, getCoreRowModel: getCoreRowModel() });
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.short_description.trim()) {
+      toast({ title: "Validation error", body: "Short description is required" });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/now/table/${table}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        const j = await res.json();
+        const num = j.result?.number || "Record";
+        toast({ title: `${num} created`, body: "Added to queue successfully" });
+        setCreateOpen(false);
+        setForm({
+          short_description: "",
+          description: "",
+          urgency: 3,
+          impact: 3,
+          category: "inquiry",
+          type: "normal",
+          risk: 3,
+          implementation_plan: "",
+          workaround: "",
+          root_cause: "",
+          known_error: false,
+        });
+        load(PRESETS[preset] ?? "");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: "Failed to create", body: err.error || `HTTP ${res.status}` });
+      }
+    } catch (e: any) {
+      toast({ title: "Network error", body: e.message || "Failed to reach server" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getRecordLabel = () => {
+    if (table === "incident") return "Incident";
+    if (table === "change_request") return "Change";
+    if (table === "problem") return "Problem";
+    return "Record";
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -131,35 +201,46 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
             { value: "p1", label: "P1 critical" },
           ]}
         />
-        <form
-          className="t-input-wrap relative ml-auto w-72"
-          onSubmit={(e) => {
-            e.preventDefault();
-            load(query);
-          }}
-        >
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="sysparm_query — priority=1^active=true"
-            className="t-input h-9 w-full rounded-md border border-input bg-transparent pl-8 pr-8 text-[15px] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {query && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setQuery("");
-                setPreset("all");
-                load("");
-              }}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </form>
+        <div className="ml-auto flex items-center gap-2">
+          <form
+            className="t-input-wrap relative w-72"
+            onSubmit={(e) => {
+              e.preventDefault();
+              load(query);
+            }}
+          >
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="sysparm_query — priority=1^active=true"
+              className="t-input h-9 w-full rounded-md border border-input bg-transparent pl-8 pr-8 text-[15px] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {query && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setQuery("");
+                  setPreset("all");
+                  load("");
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </form>
+          <Button
+            size="sm"
+            variant="signal"
+            onClick={() => setCreateOpen(true)}
+            className="flex items-center gap-1.5 h-9 px-3"
+          >
+            <Plus className="h-4 w-4" />
+            New {getRecordLabel()}
+          </Button>
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground" aria-live="polite">
@@ -255,6 +336,197 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
           </table>
         </div>
       )}
+
+      {/* Record Creation Modal */}
+      <Modal open={createOpen} onOpenChange={(v) => setCreateOpen(v)}>
+        <div className="mb-4">
+          <h2 className="font-display text-xl font-semibold">Create New {getRecordLabel()}</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Fill in the attributes below to log a new ticket into the system.
+          </p>
+        </div>
+
+        <form onSubmit={handleCreate} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Short Description *
+            </label>
+            <Input
+              required
+              placeholder={`Summary of this ${getRecordLabel().toLowerCase()}...`}
+              value={form.short_description}
+              onChange={(e) => setForm({ ...form, short_description: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Detailed Description
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Additional background, reproduction steps, or context..."
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                Urgency
+              </label>
+              <select
+                value={form.urgency}
+                onChange={(e) => setForm({ ...form, urgency: Number(e.target.value) })}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value={1}>1 - High</option>
+                <option value={2}>2 - Medium</option>
+                <option value={3}>3 - Low</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                Impact
+              </label>
+              <select
+                value={form.impact}
+                onChange={(e) => setForm({ ...form, impact: Number(e.target.value) })}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value={1}>1 - High</option>
+                <option value={2}>2 - Medium</option>
+                <option value={3}>3 - Low</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table Specific Fields */}
+          {table === "incident" && (
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                Category
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="inquiry">Inquiry / Help</option>
+                <option value="software">Software</option>
+                <option value="hardware">Hardware</option>
+                <option value="network">Network</option>
+                <option value="database">Database</option>
+              </select>
+            </div>
+          )}
+
+          {table === "change_request" && (
+            <div className="space-y-3 border-t pt-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Change Type
+                  </label>
+                  <select
+                    value={form.type}
+                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="normal">Normal (CAB Review)</option>
+                    <option value="standard">Standard (Pre-Approved)</option>
+                    <option value="emergency">Emergency</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Risk Level
+                  </label>
+                  <select
+                    value={form.risk}
+                    onChange={(e) => setForm({ ...form, risk: Number(e.target.value) })}
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value={1}>High Risk</option>
+                    <option value={2}>Medium Risk</option>
+                    <option value={3}>Low Risk</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Implementation Plan
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Outline deployment steps, commands, or release sequence..."
+                  value={form.implementation_plan}
+                  onChange={(e) => setForm({ ...form, implementation_plan: e.target.value })}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
+          )}
+
+          {table === "problem" && (
+            <div className="space-y-3 border-t pt-3">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                <input
+                  type="checkbox"
+                  checked={form.known_error}
+                  onChange={(e) => setForm({ ...form, known_error: e.target.checked })}
+                  className="rounded border-input text-[hsl(var(--signal))] focus:ring-[hsl(var(--signal))]"
+                />
+                Flag as Known Error
+              </label>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Workaround (Interim Mitigation)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Document interim workaround for agents..."
+                  value={form.workaround}
+                  onChange={(e) => setForm({ ...form, workaround: e.target.value })}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Root Cause Analysis
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Suspected or confirmed root cause..."
+                  value={form.root_cause}
+                  onChange={(e) => setForm({ ...form, root_cause: e.target.value })}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-3 border-t">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setCreateOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="signal" disabled={submitting}>
+              {submitting ? "Creating..." : `Create ${getRecordLabel()}`}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
