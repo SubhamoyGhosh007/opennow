@@ -26,6 +26,18 @@ const AvatarFallback = React.forwardRef<
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
+const AvatarImage = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Image>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Image
+    ref={ref}
+    className={cn("aspect-square h-full w-full", className)}
+    {...props}
+  />
+));
+AvatarImage.displayName = AvatarPrimitive.Image.displayName;
+
 export function InitialsAvatar({ name, className }: { name: string; className?: string }) {
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
   return (
@@ -35,4 +47,4 @@ export function InitialsAvatar({ name, className }: { name: string; className?: 
   );
 }
 
-export { Avatar, AvatarFallback };
+export { Avatar, AvatarImage, AvatarFallback };

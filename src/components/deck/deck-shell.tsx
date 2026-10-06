@@ -1,6 +1,7 @@
 "use client";
 import { AppSidebar } from "@/components/deck/app-sidebar";
 import { StatusStrip } from "@/components/deck/status-strip";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 export function DeckShell({
   title,
@@ -12,12 +13,12 @@ export function DeckShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <SidebarProvider defaultOpen>
       <AppSidebar />
-      <div className="min-w-0 flex-1">
+      <SidebarInset>
         <StatusStrip title={title} context={context} />
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
+        <div className="flex-1 p-5 overflow-auto">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
