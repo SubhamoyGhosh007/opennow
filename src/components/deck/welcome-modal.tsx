@@ -56,11 +56,11 @@ export function WelcomeModal() {
           </li>
         ))}
       </ol>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-        <button onClick={() => dismiss(true)} className="text-xs text-muted-foreground hover:text-foreground">
+      <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <button onClick={() => dismiss(true)} className="order-2 py-2 text-center text-xs text-muted-foreground hover:text-foreground sm:order-1 sm:py-0 sm:text-left">
           Don&apos;t show this again
         </button>
-        <Button onClick={() => dismiss(false)}>Show me around</Button>
+        <Button onClick={() => dismiss(false)} className="order-1 w-full sm:order-2 sm:w-auto">Show me around</Button>
       </div>
     </Modal>
   );
