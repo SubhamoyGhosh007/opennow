@@ -110,7 +110,7 @@ export function ChatDemo({ ticket }: { ticket?: ChatDemoTicket | null }) {
 
       {/* user bubble */}
       <div className="mt-4 flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--ls-ink,#0d2833)] px-3.5 py-2.5 text-sm text-white">
+        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#0d2833] dark:bg-[#152e3b] px-3.5 py-2.5 text-sm text-white">
           {typed}
           {phase === "typing" && <span className="chat-caret" aria-hidden />}
         </div>
@@ -124,7 +124,7 @@ export function ChatDemo({ ticket }: { ticket?: ChatDemoTicket | null }) {
           </p>
         )}
         {stream.slice(0, lines).map((s, i) => (
-          <p key={`${t.number}-${i}`} className="stream-line rounded-xl rounded-br-md bg-[var(--ls-ink,#0d2833)] px-3.5 py-2.5 text-[13px] leading-relaxed text-white">
+          <p key={`${t.number}-${i}`} className="stream-line rounded-xl rounded-br-md bg-[#0d2833] dark:bg-[#152e3b] px-3.5 py-2.5 text-[13px] leading-relaxed text-white">
             {s}
           </p>
         ))}

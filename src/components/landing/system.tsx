@@ -92,7 +92,7 @@ export function SysNav() {
     { href: "#faq", label: "FAQ" },
   ];
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--ls-line)] bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[var(--ls-line)] bg-white/90 dark:bg-[#071015]/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-6">
         <a
           href="#top"
@@ -100,7 +100,7 @@ export function SysNav() {
           className="flex items-center gap-2 cursor-pointer"
           aria-label="OpenNow home"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--ls-ink)] font-ticket text-[11px] font-bold text-[var(--ls-lime)]">
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0d2833] dark:bg-[#152e3b] font-ticket text-[11px] font-bold text-[var(--ls-lime)]">
             ON
           </span>
           <span className="font-display text-lg font-bold tracking-tight">OpenNow</span>
@@ -139,7 +139,7 @@ export function SysNav() {
         </div>
       </div>
       {open && (
-        <nav className="border-t border-[var(--ls-line)] px-4 py-3 lg:hidden" aria-label="Mobile">
+        <nav className="border-t border-[var(--ls-line)] bg-white dark:bg-[#071015] px-4 py-3 lg:hidden" aria-label="Mobile">
           {links.map((l) => (
             <a
               key={l.href}
@@ -225,7 +225,7 @@ export function Hero({ rows }: { rows: Row[] | null }) {
           ))}
         </div>
         <form
-          className="mt-4 flex max-w-md items-center gap-2 rounded-full border border-[var(--ls-line)] bg-white p-1.5 pl-4 shadow-sm"
+          className="mt-4 flex max-w-md items-center gap-2 rounded-full border border-[var(--ls-line)] bg-white dark:bg-[#0e1e26] p-1.5 pl-4 shadow-sm"
           onSubmit={(e) => {
             e.preventDefault();
             setApplied(filter);
@@ -236,7 +236,7 @@ export function Hero({ rows }: { rows: Row[] | null }) {
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Try a ticket number or word…"
             aria-label="Filter the live queue preview"
-            className="h-9 flex-1 bg-transparent text-[15px] outline-none placeholder:text-[var(--ls-muted)]"
+            className="h-9 flex-1 bg-transparent text-[15px] outline-none placeholder:text-[var(--ls-muted)] text-[var(--ls-ink)]"
           />
           <button type="submit" className="ls-btn !py-3">
             Search
@@ -252,7 +252,7 @@ export function Hero({ rows }: { rows: Row[] | null }) {
         <div className="relative">
           <ChatDemo ticket={demoTicket} />
         </div>
-        <div className="float-med absolute -bottom-6 -left-2 hidden w-60 rounded-2xl border border-[var(--ls-line)] bg-white p-4 shadow-[0_24px_64px_-24px_rgba(13,40,51,0.35)] md:block">
+        <div className="float-med absolute -bottom-6 -left-2 hidden w-60 rounded-2xl border border-[var(--ls-line)] bg-white dark:bg-[#0e1e26] p-4 shadow-[0_24px_64px_-24px_rgba(13,40,51,0.35)] md:block">
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--ls-muted)]">SLA heartbeat</p>
           <p className="font-display mt-1 text-3xl font-bold">60s</p>
           <p className="mt-1 flex items-center gap-1 text-xs text-[var(--ls-muted)]">
@@ -331,10 +331,10 @@ function StoryScene({ id }: { id: (typeof STORY_STEPS)[number]["id"] }) {
             Laptop won&apos;t boot ahead of demo…
           </div>
           <div className="flex gap-2">
-            <span className="rounded-full bg-[var(--ls-ink)] px-3 py-1 text-xs font-bold text-white">Urgency · High</span>
-            <span className="rounded-full bg-[var(--ls-ink)] px-3 py-1 text-xs font-bold text-white">Impact · High</span>
+            <span className="rounded-full bg-[#0d2833] dark:bg-[#152e3b] px-3 py-1 text-xs font-bold text-white">Urgency · High</span>
+            <span className="rounded-full bg-[#0d2833] dark:bg-[#152e3b] px-3 py-1 text-xs font-bold text-white">Impact · High</span>
           </div>
-          <div className="rounded-full bg-[var(--ls-lime,#c8ff00)] px-4 py-2.5 text-center text-sm font-bold text-[var(--ls-ink,#0d2833)]">
+          <div className="rounded-full bg-[var(--ls-lime,#c8ff00)] px-4 py-2.5 text-center text-sm font-bold text-[#0d2833]">
             File as P1 →
           </div>
         </div>
@@ -352,7 +352,7 @@ function StoryScene({ id }: { id: (typeof STORY_STEPS)[number]["id"] }) {
             { n: "INC0000418", s: "Printer jam, floor 3", p: 4, st: "On Hold" },
           ].map((r) => (
             <div key={r.n} className="flex items-center gap-2.5 rounded-xl border border-[var(--ls-line)] px-3 py-2.5">
-              <span className={cn("rounded-md px-1.5 py-0.5 font-ticket text-[11px] font-bold", r.p === 1 ? "bg-red-600 text-white" : "bg-slate-100 text-slate-600")}>
+              <span className={cn("rounded-md px-1.5 py-0.5 font-ticket text-[11px] font-bold", r.p === 1 ? "bg-red-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300")}>
                 P{r.p}
               </span>
               <span className="min-w-0 flex-1">
@@ -428,7 +428,7 @@ export function StorySection() {
               data-step={i}
               className={cn(
                 "rounded-2xl border p-6 transition-colors duration-300 lg:min-h-[38vh] lg:py-10",
-                active === i ? "border-[var(--ls-ink)] bg-white shadow-sm" : "border-transparent"
+                active === i ? "border-[var(--ls-ink)] bg-white dark:bg-[#0e1e26] shadow-sm" : "border-transparent"
               )}
             >
               <p className="font-ticket text-sm font-bold text-[var(--ls-muted)]">{s.n}</p>
@@ -467,7 +467,7 @@ export function Walkthrough({ rows }: { rows: Row[] | null }) {
             records, latest first.
           </p>
         </div>
-        <div className="relative mx-auto mt-10 max-w-4xl overflow-hidden rounded-[24px] border border-[var(--ls-line)] bg-white shadow-[0_40px_100px_-40px_rgba(13,40,51,0.4)]" data-rv>
+        <div className="relative mx-auto mt-10 max-w-4xl overflow-hidden rounded-[24px] border border-[var(--ls-line)] bg-white dark:bg-[#0e1e26] shadow-[0_40px_100px_-40px_rgba(13,40,51,0.4)]" data-rv>
           <div className="space-y-2 p-5 md:p-8" aria-live="polite">
             {recent.length === 0 ? (
               <p className="rounded-2xl bg-[var(--ls-mist)] p-10 text-center text-[15px] text-[var(--ls-muted)]">
@@ -476,14 +476,14 @@ export function Walkthrough({ rows }: { rows: Row[] | null }) {
             ) : (
               recent.map((r, i) => (
                 <div key={r.id} className="flex items-center gap-4 rounded-2xl bg-[var(--ls-mist)] p-4" style={{ opacity: 1 - i * 0.18 }}>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--ls-ink)] font-ticket text-xs font-bold text-[var(--ls-lime)]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0d2833] dark:bg-[#152e3b] font-ticket text-xs font-bold text-[var(--ls-lime)]">
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-semibold">{r.short_description}</span>
                     <span className="font-ticket text-xs text-[var(--ls-muted)]">{r.number} · {STATE_LABEL[r.state] ?? r.state}</span>
                   </span>
-                  <span className="hidden rounded-full bg-white px-3 py-1 font-ticket text-[11px] font-bold sm:inline">
+                  <span className="hidden rounded-full bg-white dark:bg-[#11222b] border border-transparent dark:border-[var(--ls-line)] px-3 py-1 font-ticket text-[11px] font-bold sm:inline">
                     P{r.priority}
                   </span>
                 </div>
@@ -496,7 +496,7 @@ export function Walkthrough({ rows }: { rows: Row[] | null }) {
                 <button className="ls-play" aria-label="Open the live queue" onClick={() => setPlaying(true)}>
                   <Play className="ml-1 h-6 w-6 fill-current" />
                 </button>
-                <TransitionLink href="/workspace/incident" direction="nav-forward" className="rounded-full bg-white px-4 py-2 text-[15px] font-bold">
+                <TransitionLink href="/workspace/incident" direction="nav-forward" className="rounded-full bg-white dark:bg-[#11222b] text-[var(--ls-ink)] border border-[var(--ls-line)] px-4 py-2 text-[15px] font-bold">
                   Step into the live queue
                 </TransitionLink>
               </>
@@ -580,7 +580,7 @@ export function Roles({ rows }: { rows: Row[] | null }) {
             <p className="mt-1 text-[15px] text-[var(--ls-muted)]">tickets open across the platform</p>
             <div className="mt-4 space-y-2">
               {(rows || []).slice(0, 3).map((r) => (
-                <div key={r.id} className="rounded-xl bg-white px-3 py-2 text-[15px]">
+                <div key={r.id} className="rounded-xl bg-white dark:bg-[#0e1e26] border border-transparent dark:border-[var(--ls-line)] px-3 py-2 text-[15px]">
                   <span className="font-ticket text-xs font-bold text-[var(--ls-muted)]">{r.number}</span>
                   <span className="block truncate font-medium">{r.short_description}</span>
                 </div>
@@ -625,7 +625,7 @@ export function Engines() {
               className={cn(
                 "whitespace-nowrap rounded-xl border px-4 py-3 text-left text-[15px] font-semibold transition-colors",
                 id === x.id
-                  ? "border-[var(--ls-ink)] bg-[var(--ls-ink)] text-white"
+                  ? "border-[var(--ls-ink)] bg-[var(--ls-ink)] text-white dark:text-[#071015]"
                   : "border-[var(--ls-line)] text-[var(--ls-muted)] hover:text-[var(--ls-ink)]"
               )}
             >
@@ -635,21 +635,21 @@ export function Engines() {
           ))}
         </div>
         <div key={e.id} className="tab-enter rounded-[24px] bg-[var(--ls-mist)] p-6 md:p-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold uppercase tracking-widest">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ls-ink)]" /> {e.status}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#0d2833]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0d2833]" /> {e.status}
           </span>
           <h3 className="font-display mt-4 text-2xl font-bold md:text-3xl">{e.label}</h3>
           <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--ls-muted)]">{e.body}</p>
           <ul className="mt-5 grid gap-2 sm:grid-cols-3">
             {e.points.map((p) => (
-              <li key={p} className="flex items-start gap-2 rounded-xl bg-white p-3 text-[15px] font-medium">
+              <li key={p} className="flex items-start gap-2 rounded-xl bg-white dark:bg-[#0e1e26] border border-transparent dark:border-[var(--ls-line)] p-3 text-[15px] font-medium">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ls-lime-deep)]" strokeWidth={3} /> {p}
               </li>
             ))}
           </ul>
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {e.tools.map((t) => (
-              <span key={t} className="rounded-md bg-[var(--ls-ink)] px-3 py-1 font-ticket text-xs text-white">{t}</span>
+              <span key={t} className="rounded-md bg-[#0d2833] dark:bg-[#152e3b] px-3 py-1 font-ticket text-xs text-white">{t}</span>
             ))}
             <TransitionLink href="/workspace/incident" direction="nav-forward" className="ml-auto inline-flex items-center gap-1 text-[15px] font-bold underline-offset-4 hover:underline">
               See it enforcing <ArrowRight className="h-4 w-4" />
@@ -816,7 +816,7 @@ export function Compare() {
           <h2 className="font-display mt-3 text-[32px] font-bold tracking-tight md:text-5xl">Stop renting your own tickets.</h2>
           <p className="mt-3 text-[15px] text-[var(--ls-muted)] md:text-xl">What conventional options charge extra for, OpenNow treats as table stakes.</p>
         </div>
-        <div className="mx-auto mt-10 max-w-5xl overflow-x-auto rounded-[20px] border border-[var(--ls-line)] bg-white" data-rv>
+        <div className="mx-auto mt-10 max-w-5xl overflow-x-auto rounded-[20px] border border-[var(--ls-line)] bg-white dark:bg-[#0e1e26]" data-rv>
           <table className="w-full min-w-[640px] text-left text-[15px]">
             <thead>
               <tr className="border-b border-[var(--ls-line)]">
@@ -876,13 +876,23 @@ export function Pricing() {
             {(["Monthly", "Yearly"] as const).map((p) => {
               const active = yearly === (p === "Yearly");
               return (
-                <button key={p} onClick={() => setYearly(p === "Yearly")} aria-pressed={active} className={cn("rounded-full px-4 py-1.5 text-[15px] font-semibold", active ? "bg-[var(--ls-ink)] text-white" : "text-[var(--ls-muted)]")}>
+                <button
+                  key={p}
+                  onClick={() => setYearly(p === "Yearly")}
+                  aria-pressed={active}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-[15px] font-semibold transition-colors",
+                    active
+                      ? "bg-[var(--ls-ink)] text-white dark:text-[#071015]"
+                      : "text-[var(--ls-muted)] hover:text-[var(--ls-ink)]"
+                  )}
+                >
                   {p}
                 </button>
               );
             })}
           </div>
-          <span className="rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold">EARLY ACCESS</span>
+          <span className="rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold text-[#0d2833]">EARLY ACCESS</span>
         </div>
       </div>
       <div className="mt-10 grid gap-4 lg:grid-cols-3">
@@ -897,7 +907,7 @@ export function Pricing() {
               )}
             >
               {t.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[var(--ls-ink)]">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#0d2833]">
                   Popular
                 </span>
               )}
@@ -909,7 +919,7 @@ export function Pricing() {
               <ul className="mt-5 flex-1 space-y-2.5">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[15px]">
-                    <span className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full", t.popular ? "bg-[var(--ls-lime)] text-[var(--ls-ink)]" : "bg-[var(--ls-limesoft)]")}>
+                    <span className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full", t.popular ? "bg-[var(--ls-lime)] text-[#0d2833]" : "bg-[var(--ls-limesoft)] text-[var(--ls-lime-deep)]")}>
                       <Check className="h-3 w-3" strokeWidth={3} />
                     </span>
                     {f}
@@ -947,7 +957,7 @@ export function Faq() {
         </div>
         <div className="mt-8 space-y-2" data-rv>
           {FAQS.map((f, i) => (
-            <div key={f.q} className="rounded-2xl bg-white px-2 py-2">
+            <div key={f.q} className="rounded-2xl bg-white dark:bg-[#0e1e26] border border-transparent dark:border-[var(--ls-line)] px-2 py-2">
               <Accordion title={<span className="font-display text-[15px] font-bold">{f.q}</span>} defaultOpen={i === 0}>
                 <p className="text-[15px] leading-relaxed text-[var(--ls-muted)]">{f.a}</p>
               </Accordion>
@@ -964,7 +974,7 @@ export function FinalCta() {
   return (
     <section className="mx-auto max-w-6xl px-4 md:px-6">
       <div className="ls-cta-glow relative mt-16 overflow-hidden rounded-[24px] px-6 py-16 text-center text-white md:py-20" data-rv>
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ls-lime)] font-ticket text-[15px] font-bold text-[var(--ls-ink)]" aria-hidden>
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ls-lime)] font-ticket text-[15px] font-bold text-[#0d2833]" aria-hidden>
           ON
         </span>
         <p className="ls-eyebrow mt-5 !text-slate-300">Self-host in minutes</p>

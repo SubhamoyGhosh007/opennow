@@ -14,6 +14,7 @@
   --ls-line: rgba(13, 40, 51, 0.12);
   --ls-navy: #0d2833;
   --ls-navy-card: #123038;
+  --ls-card: #ffffff;
   background: var(--ls-bg);
   color: var(--ls-ink);
   font-family: var(--font-body);
@@ -21,6 +22,28 @@
   --tabs-bar-bg: #e7ecee;
   --tabs-pill-bg: var(--ls-lime);
   --tabs-text-active: var(--ls-ink);
+  --tabs-text-muted: var(--ls-muted);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.dark .landing-system,
+.landing-system.dark {
+  --ls-bg: #071015;
+  --ls-mist: #0b1820;
+  --ls-ink: #f0f6f8;
+  --ls-muted: #869ba6;
+  --ls-lime: #c8ff00;
+  --ls-lime-deep: #a5df00;
+  --ls-limesoft: rgba(200, 255, 0, 0.14);
+  --ls-line: rgba(255, 255, 255, 0.09);
+  --ls-navy: #04090c;
+  --ls-navy-card: #0e1e26;
+  --ls-card: #0e1e26;
+  background: var(--ls-bg);
+  color: var(--ls-ink);
+  --tabs-bar-bg: #14242d;
+  --tabs-pill-bg: var(--ls-lime);
+  --tabs-text-active: #071015;
   --tabs-text-muted: var(--ls-muted);
 }
 
@@ -104,10 +127,16 @@
 
 /* Panels */
 .ls-card {
-  background: #ffffff;
+  background: var(--ls-card, #ffffff);
   border: 1px solid var(--ls-line);
   border-radius: 20px;
   box-shadow: 0 20px 48px -28px rgba(13, 40, 51, 0.25);
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.dark .ls-card {
+  background: var(--ls-card, #0e1e26);
+  border-color: var(--ls-line);
+  box-shadow: 0 24px 64px -28px rgba(0, 0, 0, 0.7);
 }
 .ls-panel-soft {
   background: var(--ls-mist);
@@ -115,6 +144,7 @@
 }
 .ls-section-mist {
   background: var(--ls-mist);
+  transition: background-color 200ms ease;
 }
 
 /* Circular lime play / expand controls */
@@ -126,7 +156,7 @@
   height: 72px;
   border-radius: 999px;
   background: var(--ls-lime);
-  color: var(--ls-ink);
+  color: #0d2833;
   transition: transform var(--duration-fast) var(--ease-smooth-out);
 }
 .ls-play:hover {
@@ -138,7 +168,7 @@
   background: var(--ls-lime);
   border-radius: 999px;
   padding: 6px;
-  color: var(--ls-ink);
+  color: #0d2833;
 }
 
 /* Metric cards: thin lime rule */
@@ -151,8 +181,16 @@
   background: var(--ls-navy);
   color: #ffffff;
 }
+.dark .ls-col-us {
+  background: #122530;
+  color: #ffffff;
+}
 .ls-savings {
   background: var(--ls-limesoft);
+}
+.dark .ls-savings {
+  background: rgba(200, 255, 0, 0.12);
+  color: #f0f6f8;
 }
 
 /* Final CTA glow */
@@ -161,6 +199,11 @@
     radial-gradient(ellipse 55% 65% at 50% 110%, rgba(200, 255, 0, 0.16), transparent 70%),
     var(--ls-navy);
 }
+.dark .ls-cta-glow {
+  background:
+    radial-gradient(ellipse 55% 65% at 50% 110%, rgba(200, 255, 0, 0.22), transparent 70%),
+    #04090c;
+}
 
 /* Forthcoming-capability pills */
 .ls-coming-pill {
@@ -168,11 +211,16 @@
   align-items: center;
   gap: 8px;
   border: 1px solid var(--ls-line);
-  background: #ffffff;
+  background: var(--ls-card, #ffffff);
   border-radius: 999px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.dark .ls-coming-pill {
+  background: var(--ls-card, #0e1e26);
+  color: var(--ls-ink);
 }
 .ls-coming-dot {
   width: 8px;
@@ -193,6 +241,12 @@
     radial-gradient(circle at 30% 25%, rgba(200, 255, 0, 0.5), transparent 55%),
     radial-gradient(circle at 75% 70%, rgba(13, 40, 51, 0.16), transparent 60%),
     linear-gradient(135deg, #eef4f2, #e2ecea);
+}
+.dark .ls-blob {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(200, 255, 0, 0.22), transparent 55%),
+    radial-gradient(circle at 75% 70%, rgba(13, 40, 51, 0.6), transparent 60%),
+    linear-gradient(135deg, #09161d, #0d202a);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -240,11 +294,19 @@
   color: #713f12;
   border-radius: 12px;
 }
+.dark .landing-system .note-internal {
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
 .landing-system .note-public {
   border: 1px solid var(--ls-line);
-  background: #ffffff;
+  background: var(--ls-card, #ffffff);
   color: var(--ls-ink);
   border-radius: 12px;
+}
+.dark .landing-system .note-public {
+  background: var(--ls-card, #0e1e26);
 }
 /* Masked line whip + per-letter flip — hero entrance language */
 .whip-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
