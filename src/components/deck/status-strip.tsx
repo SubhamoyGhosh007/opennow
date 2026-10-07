@@ -64,6 +64,7 @@ export function StatusStrip({ title, context }: { title: string; context?: React
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
+              className="hidden min-w-0 overflow-x-auto min-[480px]:block"
             >
               {context}
             </motion.div>
@@ -73,7 +74,7 @@ export function StatusStrip({ title, context }: { title: string; context?: React
           {session?.user && (
             <span className="flex items-center gap-2 rounded-full border border-border py-1 pl-1 pr-2">
               <InitialsAvatar name={name} className="h-6 w-6 text-[10px]" />
-              <span className="max-w-36 truncate text-xs font-medium" title={`${name} · ${roles.join(", ") || "no roles"}`}>
+              <span className="hidden max-w-36 truncate text-xs font-medium min-[420px]:inline" title={`${name} · ${roles.join(", ") || "no roles"}`}>
                 {name}
               </span>
               <button

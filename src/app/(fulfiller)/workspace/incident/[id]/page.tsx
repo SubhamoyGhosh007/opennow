@@ -198,7 +198,7 @@ export default function IncidentDetail({ params }: { params: { id: string } }) {
               placeholder="What was done?"
             />
           </label>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="ghost" onClick={() => setConfirm(null)}>Keep open</Button>
             <Button variant={confirm === 7 ? "default" : "destructive"} onClick={() => confirm && applyState(confirm, { close_code: closeCode, close_notes: closeNotes })}>
               Confirm

@@ -52,7 +52,7 @@ export function Modal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <DialogPrimitive.Content
             className={cn(
-              "t-modal w-full max-w-lg rounded-xl border bg-popover p-6 text-popover-foreground shadow-2xl",
+              "t-modal max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border bg-popover p-4 text-popover-foreground shadow-2xl sm:p-6",
               !closing && "is-open",
               closing && "is-closing",
               className

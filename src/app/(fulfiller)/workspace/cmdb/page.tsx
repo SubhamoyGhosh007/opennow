@@ -525,7 +525,7 @@ export default function CmdbExplorerPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Class
@@ -561,7 +561,7 @@ export default function CmdbExplorerPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
                   IP Address (Optional)

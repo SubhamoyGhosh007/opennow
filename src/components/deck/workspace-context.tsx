@@ -20,12 +20,25 @@ export function useWorkspaceLayoutContext() {
 }
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [header, setHeader] = React.useState<WorkspaceHeaderState>({
+  const [header, setHeaderState] = React.useState<WorkspaceHeaderState>({
     title: "ITSM Command Center",
   });
 
+  // Only publish when the title actually changes. The context node gets a
+  // fresh identity every render, so comparing it would re-fire subscribers
+  // forever (maximum update depth). Title is unique per page, and page
+  // remounts re-publish on mount, so no updates are lost.
+  const setHeader = React.useCallback((h: WorkspaceHeaderState) => {
+    setHeaderState((prev) => (prev.title === h.title ? prev : h));
+  }, []);
+
+  const value = React.useMemo(
+    () => ({ isNested: true, header, setHeader }),
+    [header, setHeader]
+  );
+
   return (
-    <WorkspaceContext.Provider value={{ isNested: true, header, setHeader }}>
+    <WorkspaceContext.Provider value={value}>
       {children}
     </WorkspaceContext.Provider>
   );

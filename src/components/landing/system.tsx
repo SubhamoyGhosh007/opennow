@@ -195,7 +195,7 @@ export function Hero({ rows }: { rows: Row[] | null }) {
     <section className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-12 md:px-6 lg:grid-cols-2 lg:items-center lg:pt-20">
       <div>
         <span className="ls-eyebrow-lime">Self-hosted ITSM</span>
-        <h1 className="font-display mt-4 text-5xl font-bold leading-[1.02] tracking-tight md:text-6xl">
+        <h1 className="font-display mt-4 text-4xl font-bold leading-[1.04] tracking-tight sm:text-5xl md:text-6xl">
           <span className="whip-mask">
             <span className="whip-line">The <FlipWord /> queue</span>
           </span>

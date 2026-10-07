@@ -23,7 +23,7 @@ export function ToastHost({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[200] flex w-80 flex-col gap-2">
+      <div className="pointer-events-none fixed bottom-4 left-4 right-4 z-[200] flex flex-col gap-2 sm:left-auto sm:right-5 sm:w-80 sm:bottom-5">
         {items.map((t) => (
           <ToastCard key={t.id} toast={t} />
         ))}

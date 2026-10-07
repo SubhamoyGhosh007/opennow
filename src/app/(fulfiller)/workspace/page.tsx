@@ -285,7 +285,8 @@ export default function OverviewPage() {
               </p>
             </div>
           ) : (
-            <div className="mt-4 flex h-36 items-end gap-3" role="img" aria-label="Records by state">
+            <div className="mt-4 overflow-x-auto" role="img" aria-label="Records by state">
+              <div className="flex h-36 min-w-[420px] items-end gap-3">
               {states.map((x) => (
                 <div key={x.s} className="flex flex-1 flex-col items-center gap-1.5">
                   <span className="font-ticket text-xs font-bold">
@@ -301,6 +302,7 @@ export default function OverviewPage() {
                   <StateBadge state={x.s} />
                 </div>
               ))}
+              </div>
             </div>
           )}
         </div>

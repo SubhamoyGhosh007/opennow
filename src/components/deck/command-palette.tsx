@@ -83,10 +83,8 @@ export function CommandPalette() {
     };
   }, []);
 
-  if (!live) return null;
-
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || !live) return;
     const needle = q.trim();
     if (needle.length < 2) {
       setHits([]);
@@ -130,6 +128,8 @@ export function CommandPalette() {
 
   const canSee = (need?: string[]) => !need || need.some((r) => roles.includes(r));
   const nav = NAV.filter((n) => canSee(n.roles));
+
+  if (!live) return null;
 
   return (
     <Command.Dialog

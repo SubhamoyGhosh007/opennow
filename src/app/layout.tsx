@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "@/styles/motion-tokens.css";
@@ -16,6 +16,12 @@ import React from "react";
 export const metadata: Metadata = {
   title: "OpenNow — Service Operations Deck",
   description: "Self-hosted ITSM platform engine: incidents, changes, problems, SLAs, CMDB.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", weight: ["400", "500", "600", "700"] });

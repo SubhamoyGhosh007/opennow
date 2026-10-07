@@ -191,66 +191,27 @@ function TeamSwitcher({
     plan: string;
   }[];
 }) {
-  const { isMobile } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState(teams[0]);
-
-  if (!activeTeam) {
+  const team = teams[0];
+  if (!team) {
     return null;
   }
 
-  const LogoIcon = activeTeam.logo;
+  const LogoIcon = team.logo;
 
+  // Static environment badge: the backend is single-tenant, so there is no
+  // per-team dataset to switch between. A dropdown here would lie.
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[var(--ls-lime,#c8ff00)] text-[var(--ls-ink,#0d2833)] font-bold shadow-sm">
-                <LogoIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-xs leading-tight">
-                <span className="truncate font-semibold">{activeTeam.name}</span>
-                <span className="truncate text-[10px] text-muted-foreground">{activeTeam.plan}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-64 rounded-lg"
-            align="start"
-            side={isMobile ? "bottom" : "right"}
-            sideOffset={4}
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Environments & Tenants
-              </DropdownMenuLabel>
-              {teams.map((team, index) => {
-                const TLogo = team.logo;
-                return (
-                  <DropdownMenuItem
-                    key={team.name}
-                    onClick={() => setActiveTeam(team)}
-                    className="gap-2 p-2 cursor-pointer"
-                  >
-                    <div className="flex size-6 items-center justify-center rounded-md border">
-                      <TLogo className="size-3.5 shrink-0" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium">{team.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{team.plan}</span>
-                    </div>
-                    <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2 rounded-lg px-2 py-1.5" title="Single-tenant workspace">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[var(--ls-lime,#c8ff00)] text-[var(--ls-ink,#0d2833)] font-bold shadow-sm">
+            <LogoIcon className="size-4" />
+          </div>
+          <div className="grid flex-1 text-left text-xs leading-tight">
+            <span className="truncate font-semibold">{team.name}</span>
+            <span className="truncate text-[10px] text-muted-foreground">{team.plan}</span>
+          </div>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );

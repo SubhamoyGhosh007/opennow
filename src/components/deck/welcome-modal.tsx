@@ -56,7 +56,7 @@ export function WelcomeModal() {
           </li>
         ))}
       </ol>
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <button onClick={() => dismiss(true)} className="text-xs text-muted-foreground hover:text-foreground">
           Don&apos;t show this again
         </button>

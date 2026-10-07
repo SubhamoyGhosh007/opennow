@@ -261,7 +261,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
         />
         <div className="ml-auto flex items-center gap-2">
           <form
-            className="t-input-wrap relative w-72"
+            className="t-input-wrap relative w-full sm:w-72"
             onSubmit={(e) => {
               e.preventDefault();
               load(query);
@@ -368,8 +368,8 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
           </TransitionLink>
         </div>
       ) : (
-        <div className="deck-panel overflow-hidden">
-          <table className="w-full text-[15px]">
+        <div className="deck-panel overflow-x-auto">
+          <table className="w-full min-w-[620px] text-[15px]">
             <thead>
               {t.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className="border-b border-border text-left text-xs uppercase text-muted-foreground">
@@ -423,7 +423,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Urgency
@@ -477,7 +477,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
 
           {table === "change_request" && (
             <div className="space-y-3 border-t pt-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1">
                     Change Type

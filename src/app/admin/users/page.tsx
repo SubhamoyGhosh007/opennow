@@ -152,8 +152,8 @@ export default function AdminUsersPage() {
             <p className="mt-1 text-sm text-muted-foreground">Create the first fulfiller to staff the queue.</p>
           </div>
         ) : (
-          <div className="deck-panel overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="deck-panel overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
                   <th className="px-3 py-2.5 font-medium">Account</th>
@@ -217,7 +217,7 @@ export default function AdminUsersPage() {
         <h2 className="font-display text-lg font-semibold">
           {modal === "create" ? "Create account" : `Edit @${(modal as UserRow)?.user_name}`}
         </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {modal === "create" && (
             <>
               <label className="block text-sm">
