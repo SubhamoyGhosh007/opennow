@@ -105,7 +105,12 @@ function LoginForm() {
   const submit = async () => {
     setBusy(true);
     setFailed(false);
-    const res = await signIn("credentials", { username: email.trim(), password, redirect: false });
+    const res = await signIn("credentials", {
+      username: email.trim(),
+      password,
+      callbackUrl,
+      redirect: false,
+    });
     setBusy(false);
     if (res?.error) {
       fail();

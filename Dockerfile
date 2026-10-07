@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Real values come from Dokploy environment at RUNTIME and override these.
 ENV AUTH_SECRET=build-time-placeholder-secret-000000000000 \
     DATABASE_URL=postgres://build:build@localhost:5432/build \
-    NEXTAUTH_URL=http://localhost:3000 \
+    AUTH_TRUST_HOST=true \
     REDIS_HOST=localhost \
     REDIS_PORT=6379
 RUN npm run build
@@ -24,7 +24,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
+    NEXT_TELEMETRY_DISABLED=1 \
+    AUTH_TRUST_HOST=true
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public

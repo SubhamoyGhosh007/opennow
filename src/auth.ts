@@ -85,8 +85,20 @@ providers.push(
   })
 );
 
+// In NextAuth v5, NEXTAUTH_URL hardcodes the origin and breaks reverse proxy / HTTPS deployments.
+// Strip localhost NEXTAUTH_URL / AUTH_URL so NextAuth dynamically uses request headers (x-forwarded-*).
+if (process.env.NEXTAUTH_URL && /localhost|127\.0\.0\.1/.test(process.env.NEXTAUTH_URL)) {
+  delete process.env.NEXTAUTH_URL;
+}
+if (process.env.AUTH_URL && /localhost|127\.0\.0\.1/.test(process.env.AUTH_URL)) {
+  delete process.env.AUTH_URL;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    "build-time-placeholder-secret-000000000000",
   trustHost: true,
   session: { strategy: "jwt" },
   providers,

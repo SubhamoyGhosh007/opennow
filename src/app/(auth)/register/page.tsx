@@ -77,8 +77,10 @@ function RegisterForm() {
   }, []);
 
   React.useEffect(() => {
-    if (status === "authenticated") router.replace(callbackUrl);
-  }, [status, router, callbackUrl]);
+    if (status === "authenticated") {
+      window.location.href = callbackUrl;
+    }
+  }, [status, callbackUrl]);
 
   const submit = async () => {
     setError("");
@@ -110,6 +112,7 @@ function RegisterForm() {
       const login = await signIn("credentials", {
         username: j.result.user_name,
         password,
+        callbackUrl,
         redirect: false,
       });
       setBusy(false);
@@ -118,7 +121,9 @@ function RegisterForm() {
         return;
       }
       setDone(true);
-      setTimeout(() => router.push(callbackUrl), 650);
+      setTimeout(() => {
+        window.location.href = callbackUrl;
+      }, 500);
     } catch {
       setBusy(false);
       setError("Network error — try again.");
