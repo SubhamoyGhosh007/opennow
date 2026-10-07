@@ -1,0 +1,76 @@
+# OpenNow on Dokploy (Compose service).
+# Point Dokploy at this file, then set the variables below in the Dokploy
+# environment UI. Run `npm run db:migrate` + `npm run db:seed` once from the
+# app container terminal after the first deploy.
+#
+# Required environment variables (set in Dokploy UI, NOT in this file):
+#   POSTGRES_PASSWORD  - database password (also used in DATABASE_URL)
+#   AUTH_SECRET        - `openssl rand -base64 32`
+#   NEXTAUTH_URL       - public URL, e.g. https://opennow.your-domain.com
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgres://opennow:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in Dokploy env}@postgres:5432/opennow
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in Dokploy env}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?set NEXTAUTH_URL in Dokploy env}
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://opennow:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in Dokploy env}@postgres:5432/opennow
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in Dokploy env}
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: opennow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in Dokploy env}
+      POSTGRES_DB: opennow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opennow -d opennow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
