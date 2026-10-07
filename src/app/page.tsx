@@ -4,6 +4,7 @@ import { ScrollProgress } from "@/components/landing/reveal";
 import {
   SysNav,
   Hero,
+  StorySection,
   LogoStrip,
   Walkthrough,
   Roles,
@@ -55,6 +56,18 @@ export default function Home() {
       }
     }
   }, []);
+  React.useEffect(() => {
+    // Feed cursor coordinates to every .ac-spotlight card for the tracking glow.
+    const move = (e: PointerEvent) => {
+      const el = (e.target as HTMLElement).closest?.(".ac-spotlight") as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", move, { passive: true });
+    return () => document.removeEventListener("pointermove", move);
+  }, []);
   return (
     <main id="top" className="landing-system min-h-screen">
       <ScrollProgress />
@@ -64,6 +77,7 @@ export default function Home() {
         <ShieldLine />
       </div>
       <LogoStrip />
+      <StorySection />
       <Walkthrough rows={rows} />
       <Roles rows={rows} />
       <Engines />

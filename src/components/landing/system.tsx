@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { startTransition } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Play,
@@ -20,6 +21,7 @@ import { Accordion } from "@/components/motion/accordion";
 import { SuccessCheck, ShimmerLine } from "@/components/motion/micro";
 import { SlidingTabs } from "@/components/motion/sliding-tabs";
 import { Reveal, PanelReveal, LiveNumber, FlipWord } from "@/components/landing/reveal";
+import { ChatDemo } from "@/components/landing/chat-demo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -164,17 +166,8 @@ export function Hero({ rows }: { rows: Row[] | null }) {
   const [mode, setMode] = React.useState<Mode>("queue");
   const [filter, setFilter] = React.useState("");
   const [applied, setApplied] = React.useState("");
-  // Simulated analysis beat on every view change, mirroring the audit UX:
-  // shimmer while "scanning", then reveal the filtered evidence.
-  const [scanning, setScanning] = React.useState(false);
-  React.useEffect(() => {
-    if (rows === null) return;
-    setScanning(true);
-    const t = setTimeout(() => setScanning(false), 550);
-    return () => clearTimeout(t);
-  }, [mode, applied, rows]);
 
-  const visible = React.useMemo(() => {
+  const candidates = React.useMemo(() => {
     let list = rows || [];
     if (mode === "p1") list = list.filter((r) => r.priority === 1 && r.active);
     if (mode === "settled") list = list.filter((r) => r.state === 6 || r.state === 7);
@@ -184,10 +177,19 @@ export function Hero({ rows }: { rows: Row[] | null }) {
         (r) => r.number.toLowerCase().includes(q) || r.short_description.toLowerCase().includes(q)
       );
     }
-    return list.slice(0, 4);
+    return list;
   }, [rows, mode, applied]);
 
-  const open = rows?.filter((r) => r.active).length ?? null;
+  const demoTicket = React.useMemo(() => {
+    const pick = candidates[0];
+    if (!pick) return null;
+    return {
+      number: pick.number,
+      short_description: pick.short_description,
+      priority: pick.priority,
+      state: pick.state,
+    };
+  }, [candidates]);
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-12 md:px-6 lg:grid-cols-2 lg:items-center lg:pt-20">
@@ -247,46 +249,8 @@ export function Hero({ rows }: { rows: Row[] | null }) {
 
       <div className="relative">
         <div className="ls-blob absolute -inset-6 rounded-[24px]" aria-hidden />
-        <div className="ls-card relative p-5">
-          <div className="flex items-center justify-between">
-            <p className="font-ticket text-xs font-bold tracking-widest text-[var(--ls-muted)]">
-              {mode === "queue" ? "OPEN QUEUE" : mode === "p1" ? "P1 WATCH" : "SETTLED"}
-            </p>
-            <span className="flex items-center gap-1.5 rounded-full bg-[var(--ls-limesoft)] px-3 py-1 text-xs font-bold">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--ls-lime-deep)]" />
-              {open === null ? "sign in for live" : `${open} open`}
-            </span>
-          </div>
-          <div className="mt-4 space-y-2" aria-live="polite">
-            {rows === null ? (
-              <p className="rounded-xl border border-dashed border-[var(--ls-line)] p-6 text-center text-[15px] text-[var(--ls-muted)]">
-                <TransitionLink href="/login" className="font-semibold underline">Sign in</TransitionLink> to load live tickets here.
-              </p>
-            ) : scanning ? (
-              <div className="space-y-2" aria-label="Scanning queue">
-                <ShimmerLine text="Scanning queue…" />
-                <div className="h-14 rounded-xl bg-[var(--ls-mist)]" />
-                <div className="h-14 rounded-xl bg-[var(--ls-mist)]" />
-              </div>
-            ) : visible.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-[var(--ls-line)] p-6 text-center text-[15px] text-[var(--ls-muted)]">
-                Nothing matches — the engine answered, the queue is clear.
-              </p>
-            ) : (
-              visible.map((r) => (
-                <TransitionLink key={r.id} href={`/workspace/incident/${r.id}`} direction="nav-forward" className="flex items-center gap-3 rounded-xl border border-[var(--ls-line)] px-3 py-3 transition-colors hover:border-[var(--ls-ink)]">
-                  <span className={cn("rounded-md px-1.5 py-0.5 font-ticket text-[11px] font-bold", r.priority === 1 ? "bg-red-600 text-white" : "bg-slate-100 text-slate-600")}>
-                    P{r.priority}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold">{r.short_description}</span>
-                    <span className="font-ticket text-xs text-[var(--ls-muted)]">{r.number} · {STATE_LABEL[r.state] ?? r.state}</span>
-                  </span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-[var(--ls-muted)]" />
-                </TransitionLink>
-              ))
-            )}
-          </div>
+        <div className="relative">
+          <ChatDemo ticket={demoTicket} />
         </div>
         <div className="float-med absolute -bottom-6 -left-2 hidden w-60 rounded-2xl border border-[var(--ls-line)] bg-white p-4 shadow-[0_24px_64px_-24px_rgba(13,40,51,0.35)] md:block">
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--ls-muted)]">SLA heartbeat</p>
@@ -300,27 +264,185 @@ export function Hero({ rows }: { rows: Row[] | null }) {
   );
 }
 
-/* 3 — Customer logo strip */
+/* 3 — Customer logo marquee (duplicated track loops seamlessly, pauses on hover) */
 const LOGOS = ["NORTHLOOP", "helix", "Vantage&Co", "KODA", "Brightline", "osmo"];
+const LOGO_STYLE = [
+  { fontWeight: 700, letterSpacing: "0.2em" },
+  { fontWeight: 400, letterSpacing: "0" },
+  { fontWeight: 600, letterSpacing: "0" },
+  { fontWeight: 800, letterSpacing: "0.3em" },
+  { fontWeight: 500, letterSpacing: "0.05em" },
+  { fontWeight: 700, letterSpacing: "-0.02em" },
+];
 export function LogoStrip() {
+  const doubled = [...LOGOS, ...LOGOS];
   return (
     <section className="border-y border-[var(--ls-line)]" aria-label="Customer logos">
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <p className="ls-eyebrow text-center">Trusted by lean IT teams</p>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-          {LOGOS.map((l, i) => (
-            <span
-              key={l}
-              className="text-[var(--ls-muted)]"
-              style={{
-                fontWeight: [700, 400, 600, 800, 500, 700][i],
-                letterSpacing: ["0.2em", "0", "0", "0.3em", "0.05em", "-0.02em"][i],
-                fontSize: 15,
-                opacity: 0.75,
+        <div className="marquee mt-5">
+          <div className="marquee-track items-center gap-14 pr-14" aria-hidden={false}>
+            {doubled.map((l, i) => (
+              <span
+                key={`${l}-${i}`}
+                aria-hidden={i >= LOGOS.length}
+                className="shrink-0 whitespace-nowrap text-[var(--ls-muted)]"
+                style={{ ...LOGO_STYLE[i % LOGOS.length], fontSize: 15, opacity: 0.75 }}
+              >
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* 3b — Scroll-linked story: sticky visual morphs through File → Triage → Resolve */
+const STORY_STEPS = [
+  {
+    id: "file",
+    n: "01",
+    title: "File in seconds",
+    body: "Anyone describes the problem in plain words. Impact × urgency scores the priority — no triage meeting, no form fatigue.",
+  },
+  {
+    id: "triage",
+    n: "02",
+    title: "Triage itself",
+    body: "P1 floats to the top, holds pause the SLA clock, and work notes stay internal while replies stay kind.",
+  },
+  {
+    id: "resolve",
+    n: "03",
+    title: "Resolve with proof",
+    body: "Close with a code and notes. The record seals read-only and the lifecycle strip tells the whole story.",
+  },
+] as const;
+
+function StoryScene({ id }: { id: (typeof STORY_STEPS)[number]["id"] }) {
+  if (id === "file") {
+    return (
+      <div className="ls-card p-5">
+        <p className="font-ticket text-xs font-bold tracking-widest text-[var(--ls-muted)]">NEW REQUEST</p>
+        <div className="mt-3 space-y-2.5">
+          <div className="rounded-xl border border-[var(--ls-line)] px-3 py-2.5 text-sm font-medium">
+            Laptop won&apos;t boot ahead of demo…
+          </div>
+          <div className="flex gap-2">
+            <span className="rounded-full bg-[var(--ls-ink)] px-3 py-1 text-xs font-bold text-white">Urgency · High</span>
+            <span className="rounded-full bg-[var(--ls-ink)] px-3 py-1 text-xs font-bold text-white">Impact · High</span>
+          </div>
+          <div className="rounded-full bg-[var(--ls-lime,#c8ff00)] px-4 py-2.5 text-center text-sm font-bold text-[var(--ls-ink,#0d2833)]">
+            File as P1 →
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (id === "triage") {
+    return (
+      <div className="ls-card p-5">
+        <p className="font-ticket text-xs font-bold tracking-widest text-[var(--ls-muted)]">LIVE QUEUE</p>
+        <div className="mt-3 space-y-2">
+          {[
+            { n: "INC0000420", s: "Laptop won't boot", p: 1, st: "In Progress" },
+            { n: "INC0000419", s: "VPN drops on night shift", p: 2, st: "In Progress" },
+            { n: "INC0000418", s: "Printer jam, floor 3", p: 4, st: "On Hold" },
+          ].map((r) => (
+            <div key={r.n} className="flex items-center gap-2.5 rounded-xl border border-[var(--ls-line)] px-3 py-2.5">
+              <span className={cn("rounded-md px-1.5 py-0.5 font-ticket text-[11px] font-bold", r.p === 1 ? "bg-red-600 text-white" : "bg-slate-100 text-slate-600")}>
+                P{r.p}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold">{r.s}</span>
+                <span className="font-ticket text-[11px] text-[var(--ls-muted)]">{r.n} · {r.st}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="ls-card p-5">
+      <p className="font-ticket text-xs font-bold tracking-widest text-[var(--ls-muted)]">RESOLVED</p>
+      <div className="mt-3 rounded-xl border border-[var(--ls-line)] p-4 text-center">
+        <SuccessCheck show />
+        <p className="font-ticket mt-2 text-sm font-bold">INC0000420 · Solved (Permanently)</p>
+        <p className="mt-1 text-xs text-[var(--ls-muted)]">Sealed read-only · SLA met with 38m to spare</p>
+      </div>
+    </div>
+  );
+}
+
+export function StorySection() {
+  const [active, setActive] = React.useState(0);
+  const reduce = useReducedMotion();
+  const refs = React.useRef<(HTMLDivElement | null)[]>([]);
+  React.useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const i = Number((e.target as HTMLElement).dataset.step);
+            if (!Number.isNaN(i)) setActive(i);
+          }
+        });
+      },
+      { rootMargin: "-40% 0px -40% 0px" }
+    );
+    refs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, []);
+  return (
+    <section aria-label="How OpenNow works" className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
+      <div className="grid gap-10 lg:grid-cols-2">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <p className="ls-eyebrow">How it works</p>
+          <h2 className="font-display mt-3 text-[32px] font-bold tracking-tight md:text-5xl">
+            Three moves, zero meetings.
+          </h2>
+          <div className="relative mt-8 min-h-[340px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={STORY_STEPS[active].id}
+                initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.99 }}
+                transition={{ duration: reduce ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <StoryScene id={STORY_STEPS[active].id} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {STORY_STEPS.map((s, i) => (
+            <div
+              key={s.id}
+              ref={(el) => {
+                refs.current[i] = el;
               }}
+              data-step={i}
+              className={cn(
+                "rounded-2xl border p-6 transition-colors duration-300 lg:min-h-[38vh] lg:py-10",
+                active === i ? "border-[var(--ls-ink)] bg-white shadow-sm" : "border-transparent"
+              )}
             >
-              {l}
-            </span>
+              <p className="font-ticket text-sm font-bold text-[var(--ls-muted)]">{s.n}</p>
+              <h3 className="font-display mt-2 text-2xl font-bold">{s.title}</h3>
+              <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[var(--ls-muted)]">{s.body}</p>
+              <span className="mt-4 flex gap-1.5" aria-hidden>
+                {STORY_STEPS.map((_, j) => (
+                  <span
+                    key={j}
+                    className={cn("h-1.5 rounded-full transition-all duration-300", j <= i ? "w-8 bg-[var(--ls-ink)]" : "w-4 bg-slate-200")}
+                  />
+                ))}
+              </span>
+            </div>
           ))}
         </div>
       </div>
@@ -434,7 +556,7 @@ export function Roles({ rows }: { rows: Row[] | null }) {
             ]}
           />
         </div>
-        <div className="ls-card mx-auto mt-8 grid max-w-4xl gap-8 p-6 md:grid-cols-2 md:p-10" data-rv>
+        <div className="ls-card ac-spotlight mx-auto mt-8 grid max-w-4xl gap-8 p-6 md:grid-cols-2 md:p-10" data-rv>
           <div key={role} className="tab-enter">
             <h3 className="font-display text-2xl font-bold tracking-tight md:text-3xl">{c.title}</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-[var(--ls-muted)]">{c.body}</p>
@@ -585,7 +707,7 @@ export function Metrics({ rows }: { rows: Row[] | null }) {
             </div>
           ))}
         </div>
-        <div className="ls-card mt-4 grid gap-6 p-6 md:grid-cols-[1.4fr_1fr] md:p-8" data-rv>
+        <div className="ls-card ac-spotlight mt-4 grid gap-6 p-6 md:grid-cols-[1.4fr_1fr] md:p-8" data-rv>
           <div>
             <p className="font-ticket text-xs font-bold tracking-widest text-[var(--ls-muted)]">RECORDS BY STATE</p>
             <div className="mt-4 flex h-40 items-end gap-3" role="img" aria-label="Records by state chart">
@@ -634,7 +756,7 @@ export function Testimonials() {
         <p className="ls-eyebrow">Testimonials</p>
         <h2 className="font-display mt-3 text-[32px] font-bold tracking-tight md:text-5xl">Teams that left the suite.</h2>
       </div>
-      <div className="ls-card relative mx-auto mt-10 max-w-4xl overflow-hidden p-6 md:p-10" data-rv>
+      <div className="ls-card ac-spotlight relative mx-auto mt-10 max-w-4xl overflow-hidden p-6 md:p-10" data-rv>
         <span className="font-display select-none text-7xl font-bold leading-none text-[var(--ls-lime-deep)]" aria-hidden>“</span>
         <div className="overflow-hidden">
           <div className="ls-track" style={{ transform: `translateX(-${i * 100}%)` }}>
@@ -770,7 +892,7 @@ export function Pricing() {
             <div
               key={t.name} data-rv data-rv-delay={i}
               className={cn(
-                "relative flex flex-col p-7",
+                "ac-spotlight relative flex flex-col p-7",
                 t.popular ? "rounded-[20px] bg-[var(--ls-navy)] text-white shadow-[0_32px_80px_-32px_rgba(13,40,51,0.6)]" : "ls-card"
               )}
             >

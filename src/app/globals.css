@@ -103,11 +103,26 @@
     font-size: 15px;
   }
   ::selection {
-    background: rgba(91, 140, 255, 0.32);
+    background: rgba(200, 255, 0, 0.45);
   }
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
@@ -148,5 +163,42 @@
   }
   .note-public {
     @apply rounded-xl border bg-card text-card-foreground;
+  }
+  /* primary buttons carry a soft neon glow in both themes */
+  .btn-glow {
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.35),
+      0 8px 24px -10px hsl(var(--primary) / 0.55);
+    transition:
+      box-shadow var(--duration-fast) var(--ease-smooth-out),
+      filter var(--duration-fast) var(--ease-smooth-out);
+  }
+  .btn-glow:hover {
+    filter: brightness(1.06);
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.5),
+      0 12px 32px -10px hsl(var(--primary) / 0.7);
+  }
+  /* brand-tinted shimmer sweep for loading skeletons */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, hsl(var(--primary) / 0.18) 50%, transparent 70%);
+    animation: skeleton-sheen 1.6s var(--ease-linear, linear) infinite;
+  }
+  @keyframes skeleton-sheen {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after {
+    animation: none !important;
   }
 }

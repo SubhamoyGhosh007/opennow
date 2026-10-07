@@ -23,12 +23,40 @@ import { StateBadge, PriorityBadge } from "@/components/ui/badge";
 import { NumberPop } from "@/components/motion/micro";
 import { TransitionLink } from "@/components/motion/nav-transition";
 import { QueueSkeletonRows } from "@/components/ui/skeleton";
+import { EmptyArt } from "@/components/deck/empty-art";
 
 function greeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
+}
+
+/** 7-day created-per-day buckets ending today (real record dates). */
+function dailyCounts(rows: any[], getDate: (r: any) => string | undefined): number[] {
+  const keys: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    keys.push(d.toISOString().slice(0, 10));
+  }
+  return keys.map((k) => rows.filter((r) => (getDate(r) || "").slice(0, 10) === k).length);
+}
+
+function Sparkline({ points, className }: { points: number[]; className?: string }) {
+  const w = 120;
+  const h = 28;
+  const max = Math.max(1, ...points);
+  const step = w / Math.max(1, points.length - 1);
+  const d = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(h - 2 - (p / max) * (h - 6)).toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className={className} aria-hidden preserveAspectRatio="none">
+      <path d={`${d} L${w},${h} L0,${h} Z`} fill="var(--ls-lime, #c8ff00)" opacity="0.28" />
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 export default function OverviewPage() {
@@ -104,10 +132,15 @@ export default function OverviewPage() {
   }, [openIncidents]);
 
   const recent = (incidents || []).slice(0, 5);
+  const createdDaily = dailyCounts(incidents || [], (r) => r.sys_created_at);
+  const p1Daily = dailyCounts(openIncidents.filter((r) => r.priority === 1), (r) => r.sys_created_at);
+  const resolvedDaily = dailyCounts(incidents || [], (r) =>
+    r.state === 6 || r.state === 7 ? r.sys_updated_at : undefined
+  );
 
   const stats = [
-    { label: "Active Incidents", sub: "open across queues", value: openIncidents.length, icon: Inbox },
-    { label: "P1 Critical", sub: "urgent attention required", value: p1Incidents, icon: Megaphone, alert: p1Incidents > 0 },
+    { label: "Active Incidents", sub: "open across queues", value: openIncidents.length, icon: Inbox, spark: createdDaily },
+    { label: "P1 Critical", sub: "urgent attention required", value: p1Incidents, icon: Megaphone, alert: p1Incidents > 0, spark: p1Daily },
     { label: "SLA Compliance", sub: `${breachedSlas} breaches recorded`, value: `${slaCompliance}%`, icon: CheckCircle2 },
     { label: "MTTR (Avg)", sub: "resolution velocity", value: `${mttrHours ?? "1.4"}h`, icon: Clock },
   ];
@@ -166,6 +199,12 @@ export default function OverviewPage() {
                 {loading ? "—" : typeof s.value === "number" ? <NumberPop value={s.value} /> : s.value}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">{s.sub}</p>
+              {"spark" in s && s.spark && !loading && (
+                <Sparkline
+                  points={s.spark as number[]}
+                  className={`mt-2 h-7 w-full ${s.alert ? "text-rose-500" : "text-muted-foreground"}`}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -239,9 +278,12 @@ export default function OverviewPage() {
           {loading ? (
             <QueueSkeletonRows rows={3} />
           ) : (incidents || []).length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No activity yet — file the first ticket to light up this board.
-            </p>
+            <div className="flex flex-col items-center py-8">
+              <EmptyArt kind="inbox" />
+              <p className="mt-3 text-center text-sm text-muted-foreground">
+                No activity yet — file the first ticket to light up this board.
+              </p>
+            </div>
           ) : (
             <div className="mt-4 flex h-36 items-end gap-3" role="img" aria-label="Records by state">
               {states.map((x) => (

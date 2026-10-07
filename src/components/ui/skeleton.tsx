@@ -9,10 +9,10 @@ export function QueueSkeletonRows({ rows = 6 }: { rows?: number }) {
     <div className="space-y-2" aria-hidden>
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 rounded-xl border border-border/60 p-3">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-5 flex-1" />
-          <Skeleton className="h-5 w-12" />
-          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-24 skeleton-shimmer" />
+          <Skeleton className="h-5 flex-1 skeleton-shimmer" />
+          <Skeleton className="h-5 w-12 skeleton-shimmer" />
+          <Skeleton className="h-5 w-20 skeleton-shimmer" />
         </div>
       ))}
     </div>

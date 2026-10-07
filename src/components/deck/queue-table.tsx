@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { startTransition } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,6 +14,7 @@ import { NumberPop } from "@/components/motion/micro";
 import { SlidingTabs } from "@/components/motion/sliding-tabs";
 import { TransitionLink } from "@/components/motion/nav-transition";
 import { QueueSkeletonRows } from "@/components/ui/skeleton";
+import { EmptyArt } from "@/components/deck/empty-art";
 import { Modal } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +22,22 @@ import { useToast } from "@/components/motion/toast";
 import { cn } from "@/lib/utils";
 
 const col = createColumnHelper<any>();
+
+/** Pop-in wrapper so priority/state pills morph when their value changes. */
+function BadgePop({ children }: { children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <>{children}</>;
+  return (
+    <motion.span
+      className="inline-flex"
+      initial={{ scale: 0.85, opacity: 0.4 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.span>
+  );
+}
 
 const PRESETS: Record<string, string> = {
   all: "",
@@ -32,6 +50,46 @@ const PRESETS: Record<string, string> = {
  * Operations queue — skeleton reveal on load, sliding filter tabs,
  * pop-in totals, shared-element ticket numbers into detail.
  */
+function QueueRows({ rows }: { rows: any[] }) {
+  const reduce = useReducedMotion();
+  if (reduce) {
+    return (
+      <>
+        {rows.map((r) => (
+          <tr key={r.original.id} className={cn("deck-row border-b border-border/50 last:border-0")}>
+            {r.getVisibleCells().map((c: any) => (
+              <td key={c.id} className="px-3 py-3">
+                {flexRender(c.column.columnDef.cell, c.getContext())}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </>
+    );
+  }
+  return (
+    <AnimatePresence initial={false}>
+      {rows.map((r) => (
+        <motion.tr
+          key={r.original.id}
+          layout
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.99 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className={cn("deck-row border-b border-border/50 last:border-0")}
+        >
+          {r.getVisibleCells().map((c: any) => (
+            <td key={c.id} className="px-3 py-3">
+              {flexRender(c.column.columnDef.cell, c.getContext())}
+            </td>
+          ))}
+        </motion.tr>
+      ))}
+    </AnimatePresence>
+  );
+}
+
 export function QueueTable({ table, title }: { table: string; title: string }) {
   const [data, setData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -98,11 +156,11 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
       }),
       col.accessor("priority", {
         header: "Pri",
-        cell: (c) => <PriorityBadge priority={c.getValue() as number} />,
+        cell: (c) => <BadgePop key={`p-${c.getValue()}`}><PriorityBadge priority={c.getValue() as number} /></BadgePop>,
       }),
       col.accessor("state", {
         header: "State",
-        cell: (c) => <StateBadge state={c.getValue() as number} />,
+        cell: (c) => <BadgePop key={`s-${c.getValue()}`}><StateBadge state={c.getValue() as number} /></BadgePop>,
       }),
       col.accessor("sys_created_at", {
         header: "Opened",
@@ -235,7 +293,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
             size="sm"
             variant="signal"
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-1.5 h-9 px-3"
+            className="flex items-center gap-1.5 h-9 px-3 btn-glow"
           >
             <Plus className="h-4 w-4" />
             New {getRecordLabel()}
@@ -295,7 +353,8 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
         <QueueSkeletonRows rows={7} />
       ) : data.length === 0 ? (
         <div className="deck-panel p-10 text-center">
-          <p className="font-display text-2xl font-semibold">Queue clear</p>
+          <EmptyArt kind={query || preset !== "all" ? "search" : "inbox"} className="mx-auto" />
+          <p className="font-display mt-4 text-2xl font-semibold">Queue clear</p>
           <p className="mx-auto mt-1 max-w-sm text-[15px] text-muted-foreground">
             {query || preset !== "all"
               ? "No records match this filter. Widen the query to see the rest of the queue."
@@ -303,7 +362,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
           </p>
           <TransitionLink
             href="/catalog"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110 btn-glow"
           >
             <Plus className="h-4 w-4" /> New request
           </TransitionLink>
@@ -323,15 +382,7 @@ export function QueueTable({ table, title }: { table: string; title: string }) {
               ))}
             </thead>
             <tbody>
-              {t.getRowModel().rows.map((r) => (
-                <tr key={r.id} className={cn("deck-row border-b border-border/50 last:border-0")}>
-                  {r.getVisibleCells().map((c) => (
-                    <td key={c.id} className="px-3 py-3">
-                      {flexRender(c.column.columnDef.cell, c.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              <QueueRows rows={t.getRowModel().rows} />
             </tbody>
           </table>
         </div>

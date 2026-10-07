@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { AppSidebar } from "@/components/deck/app-sidebar";
 import { StatusStrip } from "@/components/deck/status-strip";
+import { CommandPalette } from "@/components/deck/command-palette";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useWorkspaceLayoutContext } from "./workspace-context";
 
@@ -38,7 +39,12 @@ export function DeckShell({
 
   // If nested within persistent WorkspaceLayout, return animated page content directly
   if (wsCtx?.isNested) {
-    return pageContent;
+    return (
+      <>
+        {pageContent}
+        <CommandPalette />
+      </>
+    );
   }
 
   // Standalone fallback (e.g. /settings, /admin/users)
@@ -48,6 +54,7 @@ export function DeckShell({
       <SidebarInset className="flex flex-col min-h-screen">
         <StatusStrip title={title} context={context} />
         <div className="flex-1 overflow-auto flex flex-col min-h-0">{pageContent}</div>
+        <CommandPalette />
       </SidebarInset>
     </SidebarProvider>
   );
