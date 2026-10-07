@@ -149,13 +149,13 @@
   --shimmer-highlight: #0d0d0d;
   --shimmer-band: 400%;
   --shimmer-ease: linear;
-  /* Tabs sliding */
+  /* Tabs sliding — synced with landing system */
   --tabs-dur: 250ms;
   --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --tabs-text-muted: rgba(15, 15, 15, 0.8);
-  --tabs-text-active: #0f0f0f;
-  --tabs-bar-bg: #f1f1f1;
-  --tabs-pill-bg: #ffffff;
+  --tabs-text-muted: #667277;
+  --tabs-text-active: #0d2833;
+  --tabs-bar-bg: #e7ecee;
+  --tabs-pill-bg: #c8ff00;
   /* Tooltip open/close */
   --tt-in-dur: 150ms;
   --tt-out-dur: 50ms;

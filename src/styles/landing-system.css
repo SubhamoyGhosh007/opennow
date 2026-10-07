@@ -296,3 +296,15 @@
   .ls-btn:hover::after { animation: none !important; }
   .sysnav-link::after { transition: none !important; }
 }
+/* Tab content swap — replays on every mount (keyed content), token-timed */
+.tab-enter {
+  animation: tab-in var(--duration-slow) var(--ease-smooth-out) both;
+}
+@keyframes tab-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter { animation: none !important; }
+}

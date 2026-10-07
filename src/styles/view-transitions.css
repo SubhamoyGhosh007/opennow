@@ -101,12 +101,12 @@
   pointer-events: none;
 }
 
-/* Live root — unnamed content swaps instantly, named groups still animate */
+/* Live root — smooth cross-fade fallback */
 ::view-transition-old(root) {
-  display: none;
+  animation: var(--duration-exit) ease-out both fade reverse;
 }
 ::view-transition-new(root) {
-  animation: none;
+  animation: var(--duration-enter) ease-out both fade;
 }
 
 /* Persistent element isolation (command rail / status strip) */

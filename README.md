@@ -92,12 +92,24 @@ See `.env.example`. Restart `npm run dev` after adding keys.
 |---|---|
 | Anyone, no session (`/` shows sign-in prompts for live sections) | `/`, `/login` |
 | Signed-out pages → `/login`; session-less API → `401` | everything else |
-| `employee` (any signed-in user) | `/`, `/workspace` (overview), `/catalog`, `/tickets`, `/settings` |
-| `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/incident`, `/workspace/change`, `/workspace/problem` |
+| `employee` (any signed-in user) | `/`, `/workspace` (overview), `/workspace/cmdb`, `/workspace/knowledge`, `/catalog`, `/tickets`, `/settings` |
+| `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/incident`, `/workspace/change`, `/workspace/problem`, `/workspace/catalog-builder` |
+| `admin` only (others → `/`) | `/admin/users` — Users & access dashboard |
 
 Table API routes additionally re-check the session server-side (`401` with no
 session). Roles live on the JWT (`token.roles`) and session (`session.user.roles`).
 Pure gate logic in `src/lib/security/gates.ts` is unit-tested (`tests/gates.test.ts`).
+
+## Admin: Users & access
+
+Sign in as `admin` and open **Administration → Users & access** (`/admin/users`):
+
+- Create accounts with username, email, profile, password (min 8, bcrypt-hashed
+  server-side) and any combination of roles.
+- Edit profile fields, toggle active, reset passwords, re-assign roles.
+- You cannot deactivate your own account or remove your own `admin` role.
+- API: `POST /api/now/table/sys_user` and `PATCH /api/now/table/sys_user/:id`
+  (both `admin`-only, `403` otherwise; password hashes never leave the server).
 
 ## Table API (Next.js backend)
 

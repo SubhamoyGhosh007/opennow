@@ -6,6 +6,7 @@ import { DeckShell } from "@/components/deck/deck-shell";
 import { InitialsAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/motion/accordion";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -48,6 +49,18 @@ export default function SettingsPage() {
               </span>
             ))}
           </div>
+
+          {/* Theme & Appearance Preference */}
+          <div className="rounded-xl border border-border/80 bg-secondary/50 p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Appearance & Mode</p>
+                <p className="text-xs text-muted-foreground">Switch between light white and dark ops deck theme</p>
+              </div>
+              <ThemeToggle className="h-9 w-9 rounded-full border border-border bg-background" />
+            </div>
+          </div>
+
           <p className="text-xs leading-relaxed text-muted-foreground">
             Profile fields are managed by your workspace admin. Roles gate every page:
             the fulfiller workspace needs <span className="font-ticket">itil</span>, the portal needs any session.

@@ -18,6 +18,15 @@ describe("route gates", () => {
     expect(gateForRequest("/workspace", ["employee"])).toEqual({ kind: "allow" });
     expect(gateForRequest("/workspace", ["itil"])).toEqual({ kind: "allow" });
   });
+  it("read-only inventory and articles open for every role", () => {
+    expect(gateForRequest("/workspace/cmdb", ["employee"])).toEqual({ kind: "allow" });
+    expect(gateForRequest("/workspace/knowledge", ["employee"])).toEqual({ kind: "allow" });
+  });
+  it("record queues and builders stay fulfiller-only", () => {    expect(gateForRequest("/workspace/change", ["employee"])).toEqual({ kind: "redirect", to: "/tickets" });
+    expect(gateForRequest("/workspace/problem", ["employee"])).toEqual({ kind: "redirect", to: "/tickets" });
+    expect(gateForRequest("/workspace/catalog-builder", ["employee"])).toEqual({ kind: "redirect", to: "/tickets" });
+    expect(gateForRequest("/workspace/catalog-builder", ["itil"])).toEqual({ kind: "allow" });
+  });
   it("itil roles pass the workspace gate", () => {
     expect(gateForRequest("/workspace/change", ["itil"])).toEqual({ kind: "allow" });
     expect(gateForRequest("/workspace/problem", ["itil_admin"])).toEqual({ kind: "allow" });
@@ -26,5 +35,11 @@ describe("route gates", () => {
   it("any signed-in user reaches portal pages", () => {
     expect(gateForRequest("/catalog", ["employee"])).toEqual({ kind: "allow" });
     expect(gateForRequest("/tickets", ["employee"])).toEqual({ kind: "allow" });
+  });
+  it("admin pages require the admin role", () => {
+    expect(gateForRequest("/admin/users", ["admin"])).toEqual({ kind: "allow" });
+    expect(gateForRequest("/admin/users", ["itil"])).toEqual({ kind: "redirect", to: "/" });
+    expect(gateForRequest("/admin/users", ["employee"])).toEqual({ kind: "redirect", to: "/" });
+    expect(gateForRequest("/admin/users", null)).toEqual({ kind: "login" });
   });
 });

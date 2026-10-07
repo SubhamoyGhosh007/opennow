@@ -20,6 +20,7 @@ import { Accordion } from "@/components/motion/accordion";
 import { SuccessCheck, ShimmerLine } from "@/components/motion/micro";
 import { SlidingTabs } from "@/components/motion/sliding-tabs";
 import { Reveal, PanelReveal, LiveNumber, FlipWord } from "@/components/landing/reveal";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export type Row = {
@@ -59,6 +60,23 @@ export function useLandingRows() {
   return useLiveRows(100);
 }
 
+export function scrollToSection(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+  if (href.startsWith("#")) {
+    e.preventDefault();
+    const id = href.replace("#", "");
+    if (id === "top" || !id) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.history.pushState(null, "", window.location.pathname);
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", href);
+    }
+  }
+}
+
 /* 1 — Sticky navigation */
 export function SysNav() {
   const [open, setOpen] = React.useState(false);
@@ -74,7 +92,12 @@ export function SysNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--ls-line)] bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-6">
-        <a href="#top" className="flex items-center gap-2" aria-label="OpenNow home">
+        <a
+          href="#top"
+          onClick={(e) => scrollToSection(e, "#top")}
+          className="flex items-center gap-2 cursor-pointer"
+          aria-label="OpenNow home"
+        >
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--ls-ink)] font-ticket text-[11px] font-bold text-[var(--ls-lime)]">
             ON
           </span>
@@ -82,12 +105,18 @@ export function SysNav() {
         </a>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Product">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="sysnav-link text-[15px] font-medium text-[var(--ls-muted)] hover:text-[var(--ls-ink)]">
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={(e) => scrollToSection(e, l.href)}
+              className="sysnav-link text-[15px] font-medium text-[var(--ls-muted)] hover:text-[var(--ls-ink)] cursor-pointer transition-colors"
+            >
               {l.label}
             </a>
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <ThemeToggle className="h-9 w-9 rounded-full border border-[var(--ls-line)]" />
           {!signedIn && (
             <TransitionLink href="/login" className="hidden text-[15px] font-medium sm:inline">
               Log in
@@ -110,7 +139,15 @@ export function SysNav() {
       {open && (
         <nav className="border-t border-[var(--ls-line)] px-4 py-3 lg:hidden" aria-label="Mobile">
           {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block rounded-md px-2 py-2 text-[15px] font-medium">
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={(e) => {
+                setOpen(false);
+                scrollToSection(e, l.href);
+              }}
+              className="block rounded-md px-2 py-2 text-[15px] font-medium cursor-pointer hover:bg-[var(--ls-mist)] transition-colors"
+            >
               {l.label}
             </a>
           ))}
@@ -296,7 +333,7 @@ export function Walkthrough({ rows }: { rows: Row[] | null }) {
   const recent = (rows || []).slice(0, 3);
   const [playing, setPlaying] = React.useState(false);
   return (
-    <section className="ls-section-mist" id="how">
+    <section id="how" className="ls-section-mist scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-xl text-center" data-rv>
           <p className="ls-eyebrow">Walkthrough</p>
@@ -398,7 +435,7 @@ export function Roles({ rows }: { rows: Row[] | null }) {
           />
         </div>
         <div className="ls-card mx-auto mt-8 grid max-w-4xl gap-8 p-6 md:grid-cols-2 md:p-10" data-rv>
-          <div key={role}>
+          <div key={role} className="tab-enter">
             <h3 className="font-display text-2xl font-bold tracking-tight md:text-3xl">{c.title}</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-[var(--ls-muted)]">{c.body}</p>
             <ul className="mt-5 space-y-2.5">
@@ -475,7 +512,7 @@ export function Engines() {
             </button>
           ))}
         </div>
-        <div key={e.id} className="rounded-[24px] bg-[var(--ls-mist)] p-6 md:p-10" data-rv>
+        <div key={e.id} className="tab-enter rounded-[24px] bg-[var(--ls-mist)] p-6 md:p-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ls-lime)] px-3 py-1 text-xs font-bold uppercase tracking-widest">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--ls-ink)]" /> {e.status}
           </span>
@@ -850,7 +887,22 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               {c.links.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-[15px] text-[var(--ls-muted)] hover:text-[var(--ls-ink)]">{l.label}</a>
+                  {l.href.startsWith("#") ? (
+                    <a
+                      href={l.href}
+                      onClick={(e) => scrollToSection(e, l.href)}
+                      className="text-[15px] text-[var(--ls-muted)] hover:text-[var(--ls-ink)] cursor-pointer transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  ) : (
+                    <TransitionLink
+                      href={l.href}
+                      className="text-[15px] text-[var(--ls-muted)] hover:text-[var(--ls-ink)] transition-colors"
+                    >
+                      {l.label}
+                    </TransitionLink>
+                  )}
                 </li>
               ))}
             </ul>
@@ -860,9 +912,9 @@ export function Footer() {
       <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--ls-line)] pt-6">
         <p className="text-xs text-[var(--ls-muted)]">© 2026 OpenNow. A clean-room homage — not affiliated with ServiceNow.</p>
         <div className="flex gap-4 text-[var(--ls-muted)]">
-          <a href="#top" aria-label="GitHub"><Github className="h-4 w-4" /></a>
-          <a href="#top" aria-label="Twitter"><Twitter className="h-4 w-4" /></a>
-          <a href="#top" aria-label="LinkedIn"><Linkedin className="h-4 w-4" /></a>
+          <a href="#top" onClick={(e) => scrollToSection(e, "#top")} aria-label="Back to top" className="cursor-pointer hover:text-[var(--ls-ink)]"><Github className="h-4 w-4" /></a>
+          <a href="#top" onClick={(e) => scrollToSection(e, "#top")} aria-label="Back to top" className="cursor-pointer hover:text-[var(--ls-ink)]"><Twitter className="h-4 w-4" /></a>
+          <a href="#top" onClick={(e) => scrollToSection(e, "#top")} aria-label="Back to top" className="cursor-pointer hover:text-[var(--ls-ink)]"><Linkedin className="h-4 w-4" /></a>
         </div>
       </div>
     </footer>

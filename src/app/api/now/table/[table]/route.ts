@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { getSql, TABLE_MAP, getUserContext } from "@/lib/api/tableApi";
 import { calculatePriority } from "@/lib/engines/priorityEngine";
 import { generateNextNumber } from "@/lib/engines/numberGenerator";
@@ -10,11 +11,6 @@ const TASK_FIELDS = new Set([
   "urgency", "impact", "state", "assigned_to", "assignment_group", "opened_by",
   "opened_at", "closed_by", "closed_at", "active", "sys_created_at", "sys_updated_at",
 ]);
-
-const USER_SAFE_FIELDS = [
-  "id", "user_name", "email", "first_name", "last_name", "title", "department",
-  "manager_id", "vip", "active", "sys_created_at", "sys_updated_at"
-];
 
 export async function GET(req: Request, { params }: { params: { table: string } }) {
   const table = params.table;
@@ -40,7 +36,13 @@ export async function GET(req: Request, { params }: { params: { table: string } 
 
     if (table === "sys_user") {
       const rows = await sql.unsafe(
-        `SELECT ${USER_SAFE_FIELDS.join(", ")} FROM sys_user ORDER BY 1 LIMIT ${limit} OFFSET ${offset}`
+        `SELECT u.id, u.user_name, u.email, u.first_name, u.last_name, u.title, u.department,
+                u.manager_id, u.vip, u.active, u.sys_created_at, u.sys_updated_at,
+                COALESCE(array_agg(r.name) FILTER (WHERE r.name IS NOT NULL), '{}') AS roles
+         FROM sys_user u
+         LEFT JOIN sys_user_has_role hr ON hr.user_id = u.id
+         LEFT JOIN sys_user_role r ON r.id = hr.role_id
+         GROUP BY u.id ORDER BY u.sys_created_at DESC LIMIT ${limit} OFFSET ${offset}`
       );
       return NextResponse.json({ result: rows });
     }
@@ -82,6 +84,43 @@ export async function POST(req: Request, { params }: { params: { table: string }
         VALUES (${nextNum}, ${body.short_description || "Untitled Article"}, ${body.text || ""}, ${body.category || "General"}, ${body.workflow_state || "published"}, ${userId ? userId : null}::uuid, ${body.source_task_id ? `${body.source_task_id}::uuid` : null})
         RETURNING *`;
       return NextResponse.json({ result: kbRows[0] }, { status: 201 });
+    }
+    if (table === "sys_user") {
+      // Admin-only account provisioning. Passwords are bcrypt-hashed here —
+      // never accept a pre-hashed value and never return the hash.
+      if (!ctx.roles.includes("admin")) {
+        return NextResponse.json({ error: "Forbidden: admin role required" }, { status: 403 });
+      }
+      const { user_name, email, first_name, last_name, password, title, department, active, roles } = body;
+      if (!user_name || !email || !first_name || !last_name) {
+        return NextResponse.json({ error: "user_name, email, first_name and last_name are required" }, { status: 400 });
+      }
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+      }
+      if (!password || password.length < 8) {
+        return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+      }
+      const dup: any = await sql`SELECT id FROM sys_user WHERE user_name = ${user_name} OR email = ${email} LIMIT 1`;
+      if (dup.length > 0) {
+        return NextResponse.json({ error: "user_name or email already in use" }, { status: 409 });
+      }
+      const roleNames: string[] = Array.isArray(roles) && roles.length > 0 ? roles : ["employee"];
+      const allRoles: any = await sql`SELECT name FROM sys_user_role`;
+      const valid = new Set(allRoles.map((r: any) => r.name));
+      const unknown = roleNames.filter((r) => !valid.has(r));
+      if (unknown.length > 0) {
+        return NextResponse.json({ error: `Unknown roles: ${unknown.join(", ")}` }, { status: 400 });
+      }
+      const hash = await bcrypt.hash(password, 10);
+      const created: any = await sql`
+        INSERT INTO sys_user (user_name, email, first_name, last_name, password_hash, title, department, active)
+        VALUES (${user_name}, ${email}, ${first_name}, ${last_name}, ${hash}, ${title || null}, ${department || null}, ${active !== undefined ? Boolean(active) : true})
+        RETURNING id, user_name, email, first_name, last_name, title, department, vip, active`;
+      for (const rn of roleNames) {
+        await sql`INSERT INTO sys_user_has_role (user_id, role_id) SELECT ${created[0].id}::uuid, id FROM sys_user_role WHERE name = ${rn} ON CONFLICT DO NOTHING`;
+      }
+      return NextResponse.json({ result: { ...created[0], roles: roleNames } }, { status: 201 });
     }
     if (table === "sc_cat_item") {
       const vars = body.variables ? JSON.stringify(body.variables) : "[]";

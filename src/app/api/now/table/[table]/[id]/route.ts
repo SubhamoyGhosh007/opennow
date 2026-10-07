@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { getSql, TABLE_MAP, getUserContext } from "@/lib/api/tableApi";
 import { calculatePriority } from "@/lib/engines/priorityEngine";
 import { assertTransition } from "@/lib/engines/stateEngine";
@@ -30,7 +31,8 @@ export async function GET(req: Request, { params }: { params: { table: string; i
         FROM sys_user WHERE id = ${id}::uuid LIMIT 1
       `;
       if (!rows.length) return NextResponse.json({ error: "Not found" }, { status: 404 });
-      return NextResponse.json({ result: rows[0] });
+      const roleRows: any = await sql`SELECT r.name FROM sys_user_role r JOIN sys_user_has_role hr ON hr.role_id = r.id WHERE hr.user_id = ${id}::uuid`;
+      return NextResponse.json({ result: { ...rows[0], roles: roleRows.map((r: any) => r.name) } });
     }
 
     const rows: any = await sql.unsafe(`SELECT * FROM ${table} WHERE id = '${id}'::uuid LIMIT 1`);
@@ -43,7 +45,7 @@ export async function GET(req: Request, { params }: { params: { table: string; i
 
 export async function PATCH(req: Request, { params }: { params: { table: string; id: string } }) {
   const { table, id } = params;
-  if (!TABLE_MAP[table] || !["incident", "change_request", "problem", "task", "kb_knowledge"].includes(table)) {
+  if (!TABLE_MAP[table] || !["incident", "change_request", "problem", "task", "kb_knowledge", "sys_user"].includes(table)) {
     return NextResponse.json({ error: "PATCH not supported for this table" }, { status: 400 });
   }
   if (!/^[0-9a-fA-F-]{36}$/.test(id)) return NextResponse.json({ error: "Invalid UUID format" }, { status: 400 });
@@ -54,6 +56,61 @@ export async function PATCH(req: Request, { params }: { params: { table: string;
   const sql = getSql();
   const userId = ctx.id;
   const roles: string[] = ctx.roles || [];
+
+  if (table === "sys_user") {
+    // Admin-only account management. user_name/email are immutable identifiers.
+    if (!ctx.roles.includes("admin")) {
+      return NextResponse.json({ error: "Forbidden: admin role required" }, { status: 403 });
+    }
+    try {
+      const target: any = await sql`SELECT * FROM sys_user WHERE id = ${id}::uuid`;
+      if (!target.length) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      const isSelf = id === ctx.id;
+      const sets: string[] = ["sys_updated_at = NOW()"];
+      const esc = (v: any) => (v === null ? "NULL" : `'${String(v).replace(/'/g, "''")}'`);
+      if (body.first_name) sets.push(`first_name = ${esc(body.first_name)}`);
+      if (body.last_name) sets.push(`last_name = ${esc(body.last_name)}`);
+      if (body.title !== undefined) sets.push(`title = ${body.title ? esc(body.title) : "NULL"}`);
+      if (body.department !== undefined) sets.push(`department = ${body.department ? esc(body.department) : "NULL"}`);
+      if (body.vip !== undefined) sets.push(`vip = ${Boolean(body.vip)}`);
+      if (body.active !== undefined) {
+        if (isSelf && body.active === false) {
+          return NextResponse.json({ error: "You cannot deactivate your own account" }, { status: 400 });
+        }
+        sets.push(`active = ${Boolean(body.active)}`);
+      }
+      if (body.password) {
+        if (body.password.length < 8) {
+          return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+        }
+        sets.push(`password_hash = ${esc(await bcrypt.hash(body.password, 10))}`);
+      }
+      const updated: any = await sql.unsafe(
+        `UPDATE sys_user SET ${sets.join(", ")} WHERE id = '${id}'::uuid
+         RETURNING id, user_name, email, first_name, last_name, title, department, manager_id, vip, active`
+      );
+      let finalRoles: string[] = (await sql`SELECT r.name FROM sys_user_role r JOIN sys_user_has_role hr ON hr.role_id = r.id WHERE hr.user_id = ${id}::uuid`).map((r: any) => r.name);
+      if (Array.isArray(body.roles)) {
+        const allRoles: any = await sql`SELECT name FROM sys_user_role`;
+        const valid = new Set(allRoles.map((r: any) => r.name));
+        const unknown = body.roles.filter((r: string) => !valid.has(r));
+        if (unknown.length > 0) {
+          return NextResponse.json({ error: `Unknown roles: ${unknown.join(", ")}` }, { status: 400 });
+        }
+        if (isSelf && finalRoles.includes("admin") && !body.roles.includes("admin")) {
+          return NextResponse.json({ error: "You cannot remove your own admin role" }, { status: 400 });
+        }
+        await sql`DELETE FROM sys_user_has_role WHERE user_id = ${id}::uuid`;
+        for (const rn of body.roles) {
+          await sql`INSERT INTO sys_user_has_role (user_id, role_id) SELECT ${id}::uuid, id FROM sys_user_role WHERE name = ${rn} ON CONFLICT DO NOTHING`;
+        }
+        finalRoles = body.roles;
+      }
+      return NextResponse.json({ result: { ...updated[0], roles: finalRoles } });
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+  }
 
   if (table === "kb_knowledge") {
     try {

@@ -3,42 +3,63 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   :root {
-    /* shadcn theme — paper (portal) */
-    --background: 220 33% 97%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* OpenNow Unified Theme — Exactly Matching the Landing Page System */
+    /* Foundation: Pure White & Crisp Mist */
+    --background: 200 12% 98%;           /* #f7f9fa pristine mist white */
+    --foreground: 198 60% 12%;           /* #0d2833 deep navy ink */
+    
+    /* Primary Cards: Pure Snow White */
+    --card: 0 0% 100%;                   /* #ffffff pure white */
+    --card-foreground: 198 60% 12%;      /* #0d2833 */
+    
+    /* Popovers, Modals & Menus: Pure White */
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 223 100% 68%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 220 20% 93%;
-    --secondary-foreground: 222 47% 18%;
-    --muted: 220 20% 93%;
-    --muted-foreground: 220 12% 44%;
-    --accent: 220 20% 93%;
-    --accent-foreground: 222 47% 18%;
-    --destructive: 348 84% 58%;
+    --popover-foreground: 198 60% 12%;
+    
+    /* Primary Action: Landing System Lime & Deep Ink */
+    --primary: 73 100% 50%;              /* #c8ff00 landing signature lime */
+    --primary-foreground: 198 60% 12%;   /* #0d2833 deep navy ink text on lime */
+    
+    /* Secondary & Soft Panels: Landing Mist */
+    --secondary: 200 14% 96%;            /* #f4f6f7 --ls-mist */
+    --secondary-foreground: 198 60% 12%;
+    
+    /* Muted Elements & Secondary Labels: Soft Slate Slate-Mist */
+    --muted: 200 14% 94%;                /* #edf1f3 */
+    --muted-foreground: 196 8% 43%;      /* #667277 --ls-muted */
+    
+    /* Interactive Hover / Accent: Soft Lime Glow or Crisp Mist */
+    --accent: 73 85% 90%;                /* #eefbce --ls-limesoft */
+    --accent-foreground: 198 60% 12%;
+    
+    --destructive: 350 89% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 18% 88%;
-    --input: 220 18% 88%;
-    --ring: 223 100% 68%;
+    
+    /* Subtle 1px Line Borders: Landing System Line (rgba(13,40,51,0.12)) */
+    --border: 198 30% 90%;               /* crisp subtle hairline line */
+    --input: 198 30% 90%;
+    --ring: 73 100% 45%;
     --radius: 0.625rem;
-    /* deck accents */
-    --signal: 223 100% 68%;
-    --amber: 38 92% 55%;
-    --mint: 163 68% 51%;
-    --rose: 348 84% 60%;
-    /* sidebar tokens */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Deck Accents */
+    --signal: 73 100% 45%;               /* lime signal */
+    --amber: 38 92% 50%;
+    --mint: 158 64% 42%;
+    --rose: 350 89% 60%;
+    
+    /* Sidebar: Landing Chalk & Mist Shades */
+    --sidebar-background: 200 14% 97%;   /* #f5f7f8 soft distinct mist */
+    --sidebar-foreground: 198 60% 12%;   /* #0d2833 deep navy */
+    --sidebar-primary: 198 60% 12%;      /* #0d2833 */
+    --sidebar-primary-foreground: 73 100% 50%; /* #c8ff00 lime icon badge */
+    --sidebar-accent: 200 14% 93%;       /* #ecf0f2 hover pill */
+    --sidebar-accent-foreground: 198 60% 12%;
+    --sidebar-border: 198 25% 89%;
+    --sidebar-ring: 73 100% 45%;
   }
 
   .dark {
@@ -100,9 +121,9 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
-  /* quiet deck panel — borders carry hierarchy, not shadows */
+  /* quiet deck panel — layered clean white mirroring landing system cards */
   .deck-panel {
-    @apply rounded-xl border bg-card text-card-foreground;
+    @apply rounded-2xl border bg-card text-card-foreground shadow-[0_12px_32px_-20px_rgba(13,40,51,0.12)];
     border-color: hsl(var(--border));
   }
   .deck-row {
@@ -111,7 +132,7 @@
       border-color var(--duration-fast) var(--ease-smooth-out);
   }
   .deck-row:hover {
-    background: rgba(91, 140, 255, 0.07);
+    background: hsl(var(--secondary));
   }
   /* signal beam divider */
   .signal-line {

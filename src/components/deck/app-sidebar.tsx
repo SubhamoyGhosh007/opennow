@@ -37,7 +37,10 @@ import {
   LayoutDashboard,
   ShieldAlert,
   Server,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import {
   Avatar,
@@ -78,6 +81,8 @@ import {
 } from "@/components/ui/sidebar";
 import { TransitionLink } from "@/components/motion/nav-transition";
 
+const ITIL_ROLES = ["admin", "itil", "itil_admin"];
+
 const DATA = {
   teams: [
     {
@@ -114,9 +119,9 @@ const DATA = {
       icon: Inbox,
       isActive: true,
       items: [
-        { title: "Incidents", url: "/workspace/incident" },
-        { title: "Changes", url: "/workspace/change" },
-        { title: "Problems", url: "/workspace/problem" },
+        { title: "Incidents", url: "/workspace/incident", roles: ITIL_ROLES },
+        { title: "Changes", url: "/workspace/change", roles: ITIL_ROLES },
+        { title: "Problems", url: "/workspace/problem", roles: ITIL_ROLES },
       ],
     },
     {
@@ -143,7 +148,15 @@ const DATA = {
       icon: PlusCircle,
       items: [
         { title: "Browse Catalog", url: "/catalog" },
-        { title: "Catalog Item Builder", url: "/workspace/catalog-builder" },
+        { title: "Catalog Item Builder", url: "/workspace/catalog-builder", roles: ITIL_ROLES },
+      ],
+    },
+    {
+      title: "Administration",
+      url: "/admin/users",
+      icon: Settings2,
+      items: [
+        { title: "Users & access", url: "/admin/users", roles: ["admin"] },
       ],
     },
   ],
@@ -152,16 +165,19 @@ const DATA = {
       name: "Service Desk Intake",
       url: "/workspace/incident",
       icon: Inbox,
+      roles: ITIL_ROLES,
     },
     {
       name: "Network Infrastructure",
       url: "/workspace/incident",
       icon: Server,
+      roles: ITIL_ROLES,
     },
     {
       name: "Change Advisory Board",
       url: "/workspace/change",
       icon: ShieldAlert,
+      roles: ITIL_ROLES,
     },
   ],
 };
@@ -193,7 +209,7 @@ function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[hsl(var(--signal))] text-black font-bold">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[var(--ls-lime,#c8ff00)] text-[var(--ls-ink,#0d2833)] font-bold shadow-sm">
                 <LogoIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-xs leading-tight">
@@ -240,8 +256,14 @@ function TeamSwitcher({
   );
 }
 
+function canSee(roles: string[] | undefined, userRoles: string[]): boolean {
+  if (!roles) return true;
+  return roles.some((r) => userRoles.includes(r));
+}
+
 function NavMain({
   items,
+  userRoles,
 }: {
   items: {
     title: string;
@@ -251,16 +273,21 @@ function NavMain({
     items?: {
       title: string;
       url: string;
+      roles?: string[];
     }[];
   }[];
+  userRoles: string[];
 }) {
   const pathname = usePathname();
+  const visible = items
+    .map((g) => ({ ...g, items: g.items?.filter((s) => canSee(s.roles, userRoles)) }))
+    .filter((g) => (g.items?.length ?? 1) > 0);
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform & Operations</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => {
+        {visible.map((item) => {
           const Icon = item.icon;
           const isGroupActive = item.items?.some((sub) => pathname === sub.url || pathname.startsWith(sub.url + "/"));
 
@@ -305,18 +332,23 @@ function NavMain({
 
 function NavQueues({
   queues,
+  userRoles,
 }: {
   queues: {
     name: string;
     url: string;
     icon: React.ElementType;
+    roles?: string[];
   }[];
+  userRoles: string[];
 }) {
+  const visible = queues.filter((q) => canSee(q.roles, userRoles));
+  if (visible.length === 0) return null;
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Routing Groups</SidebarGroupLabel>
       <SidebarMenu>
-        {queues.map((item) => {
+        {visible.map((item) => {
           const Icon = item.icon;
           return (
             <SidebarMenuItem key={item.name}>
@@ -337,6 +369,7 @@ function NavQueues({
 function NavUser() {
   const { isMobile } = useSidebar();
   const { data: session } = useSession();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const name = session?.user?.name || "Service Console";
   const email = session?.user?.email || "fulfiller@opennow.local";
@@ -351,11 +384,11 @@ function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/20 text-xs font-bold text-primary">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[var(--ls-ink,#0d2833)] text-xs font-bold text-[var(--ls-lime,#c8ff00)] shadow-sm">
                 {name.slice(0, 2).toUpperCase()}
               </div>
               <div className="grid flex-1 text-left text-xs leading-tight">
-                <span className="truncate font-semibold">{name}</span>
+                <span className="truncate font-semibold text-[var(--ls-ink,#0d2833)]">{name}</span>
                 <span className="truncate text-[10px] text-muted-foreground">{email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 opacity-50" />
@@ -370,7 +403,7 @@ function NavUser() {
             <DropdownMenuGroup>
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-left text-xs">
-                  <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-primary/20 text-[11px] font-bold text-primary">
+                  <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-[var(--ls-ink,#0d2833)] text-[11px] font-bold text-[var(--ls-lime,#c8ff00)]">
                     {name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="grid flex-1 text-left text-xs leading-tight">
@@ -394,6 +427,22 @@ function NavUser() {
                   My Assigned Tickets
                 </TransitionLink>
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                className="cursor-pointer"
+              >
+                {resolvedTheme === "dark" ? (
+                  <>
+                    <Sun className="mr-2 h-4 w-4 text-amber-400" />
+                    Switch to Light Mode
+                  </>
+                ) : (
+                  <>
+                    <Moon className="mr-2 h-4 w-4 text-[var(--ls-ink,#0d2833)]" />
+                    Switch to Dark Mode
+                  </>
+                )}
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -413,14 +462,16 @@ function NavUser() {
 }
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = useSession();
+  const userRoles: string[] = ((session?.user as any)?.roles || []) as string[];
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={DATA.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={DATA.navMain} />
-        <NavQueues queues={DATA.queues} />
+        <NavMain items={DATA.navMain} userRoles={userRoles} />
+        <NavQueues queues={DATA.queues} userRoles={userRoles} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

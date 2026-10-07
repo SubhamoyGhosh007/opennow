@@ -18,6 +18,7 @@ export const TABLE_MAP: Record<string, { base: string; className: string; prefix
   sys_user_group: { base: "sys_user_group", className: "sys_user_group", prefix: "" },
   contract_sla: { base: "contract_sla", className: "contract_sla", prefix: "" },
   task_sla: { base: "task_sla", className: "task_sla", prefix: "" },
+  sys_user_role: { base: "sys_user_role", className: "sys_user_role", prefix: "" },
 };
 
 export async function getUserContext(req: Request): Promise<{ id: string; roles: string[] } | null> {

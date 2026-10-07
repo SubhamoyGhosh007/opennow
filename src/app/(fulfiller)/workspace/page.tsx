@@ -118,18 +118,18 @@ export default function OverviewPage() {
       context={
         <TransitionLink
           href="/catalog"
-          className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:brightness-110"
+          className="flex items-center gap-1.5 rounded-full bg-[var(--ls-lime,#c8ff00)] px-3.5 py-1.5 text-xs font-bold text-[var(--ls-ink,#0d2833)] shadow-sm hover:brightness-105 transition-all"
         >
-          <Plus className="h-4 w-4" /> New request
+          <Plus className="h-3.5 w-3.5" /> New request
         </TransitionLink>
       }
     >
       <WelcomeModal />
       <div className="space-y-4">
-        {/* Welcome Banner */}
-        <div className="deck-panel flex flex-wrap items-center justify-between gap-3 p-5">
+        {/* Welcome Banner - Pure Snow White with subtle soft border */}
+        <div className="deck-panel bg-white/95 flex flex-wrap items-center justify-between gap-3 p-5 border-border">
           <div>
-            <h1 className="font-display text-2xl font-bold">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
               {greeting()}, {name}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -147,13 +147,13 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Executive KPI Stats */}
+        {/* Executive KPI Stats - Pure White cards with elevated micro-depth */}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((s) => (
             <div
               key={s.label}
-              className={`deck-panel p-4 ${
-                s.alert ? "border-rose-500/50 bg-rose-500/5" : ""
+              className={`deck-panel bg-white p-4 transition-all hover:border-slate-300 ${
+                s.alert ? "border-rose-300 bg-rose-50/30" : ""
               }`}
             >
               <div className="flex items-center justify-between">
@@ -162,7 +162,7 @@ export default function OverviewPage() {
                 </p>
                 <s.icon className={`h-4 w-4 ${s.alert ? "text-rose-500" : "text-muted-foreground"}`} />
               </div>
-              <p className="font-ticket mt-1 text-3xl font-bold">
+              <p className="font-ticket mt-1 text-3xl font-bold text-foreground">
                 {loading ? "—" : typeof s.value === "number" ? <NumberPop value={s.value} /> : s.value}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">{s.sub}</p>
@@ -170,63 +170,63 @@ export default function OverviewPage() {
           ))}
         </div>
 
-        {/* Process Modules Quick Access Grid */}
+        {/* Process Modules Quick Access Grid - Ghost Porcelain & Pearlescent White Tones */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <TransitionLink
             href="/workspace/incident"
-            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+            className="deck-panel bg-slate-50/60 p-3.5 hover:bg-white hover:border-primary transition-all flex items-center justify-between group"
           >
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                <Inbox className="h-3.5 w-3.5 text-sky-400" /> Incidents
+                <Inbox className="h-3.5 w-3.5 text-sky-500" /> Incidents
               </p>
-              <p className="text-xl font-bold font-ticket mt-1">{(incidents || []).length}</p>
+              <p className="text-xl font-bold font-ticket mt-1 text-foreground">{(incidents || []).length}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           </TransitionLink>
 
           <TransitionLink
             href="/workspace/change"
-            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+            className="deck-panel bg-indigo-50/20 p-3.5 hover:bg-white hover:border-primary transition-all flex items-center justify-between group"
           >
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                <FolderKanban className="h-3.5 w-3.5 text-indigo-400" /> Changes
+                <FolderKanban className="h-3.5 w-3.5 text-indigo-500" /> Changes
               </p>
-              <p className="text-xl font-bold font-ticket mt-1">{changes.length}</p>
+              <p className="text-xl font-bold font-ticket mt-1 text-foreground">{changes.length}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           </TransitionLink>
 
           <TransitionLink
             href="/workspace/problem"
-            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+            className="deck-panel bg-amber-50/20 p-3.5 hover:bg-white hover:border-primary transition-all flex items-center justify-between group"
           >
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                <TicketCheck className="h-3.5 w-3.5 text-amber-400" /> Problems
+                <TicketCheck className="h-3.5 w-3.5 text-amber-500" /> Problems
               </p>
-              <p className="text-xl font-bold font-ticket mt-1">{problems.length}</p>
+              <p className="text-xl font-bold font-ticket mt-1 text-foreground">{problems.length}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           </TransitionLink>
 
           <TransitionLink
             href="/workspace/cmdb"
-            className="deck-panel p-3.5 hover:border-primary transition-all flex items-center justify-between group"
+            className="deck-panel bg-emerald-50/20 p-3.5 hover:bg-white hover:border-primary transition-all flex items-center justify-between group"
           >
             <div>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                <Database className="h-3.5 w-3.5 text-emerald-400" /> CMDB CIs
+                <Database className="h-3.5 w-3.5 text-emerald-500" /> CMDB CIs
               </p>
-              <p className="text-xl font-bold font-ticket mt-1">{cis.length}</p>
+              <p className="text-xl font-bold font-ticket mt-1 text-foreground">{cis.length}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           </TransitionLink>
         </div>
 
-        {/* Queue Pressure Chart */}
-        <div className="deck-panel p-5">
+        {/* Queue Pressure Chart - Crisp White Canvas */}
+        <div className="deck-panel bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-lg font-semibold flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function OverviewPage() {
                     <NumberPop value={x.n} />
                   </span>
                   <span
-                    className="w-full rounded-t-md bg-primary/70"
+                    className="w-full rounded-t-md bg-primary/80"
                     style={{
                       height: `${Math.max(6, (x.n / maxState) * 110)}px`,
                       transition: "height var(--duration-slow) var(--ease-smooth-out)",
@@ -263,10 +263,10 @@ export default function OverviewPage() {
           )}
         </div>
 
-        {/* Bottom 3-Column Panels */}
+        {/* Bottom 3-Column Panels with Layered Alabaster & Ivory Highlights */}
         <div className="grid gap-3 lg:grid-cols-3">
-          {/* Top Categories */}
-          <div className="deck-panel p-4">
+          {/* Top Categories - Ivory/White Panel */}
+          <div className="deck-panel bg-white p-4">
             <h2 className="font-display text-base font-semibold">Top Demand Categories</h2>
             <p className="text-xs text-muted-foreground">Concentration of open work</p>
             <div className="mt-3 space-y-2">
@@ -274,7 +274,7 @@ export default function OverviewPage() {
               {cats.map(([c, n]) => (
                 <div key={c} className="flex items-center gap-2 text-sm">
                   <span className="w-24 shrink-0 truncate capitalize">{c}</span>
-                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                     <span
                       className="block h-full rounded-full bg-primary"
                       style={{ width: `${Math.min(100, n * 25)}%` }}
@@ -286,8 +286,8 @@ export default function OverviewPage() {
             </div>
           </div>
 
-          {/* Recent Tickets */}
-          <div className="deck-panel p-4">
+          {/* Recent Tickets - Alabaster Row Highlights */}
+          <div className="deck-panel bg-white p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-base font-semibold">Recent Incidents</h2>
@@ -304,7 +304,7 @@ export default function OverviewPage() {
                   key={r.id}
                   href={`/workspace/incident/${r.id}`}
                   direction="nav-forward"
-                  className="deck-row flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-1.5"
+                  className="deck-row flex items-center gap-2 rounded-md border border-slate-200/70 bg-slate-50/50 px-2.5 py-1.5 hover:bg-slate-100/70"
                 >
                   <PriorityBadge priority={r.priority} />
                   <span className="min-w-0 flex-1 truncate text-[13px]">{r.short_description}</span>
@@ -313,8 +313,8 @@ export default function OverviewPage() {
             </div>
           </div>
 
-          {/* Assignment Groups Telemetry */}
-          <div className="deck-panel flex flex-col p-4">
+          {/* Assignment Groups Telemetry - Off-white Zinc Badge Rows */}
+          <div className="deck-panel bg-white flex flex-col p-4">
             <h2 className="font-display text-base font-semibold">Assignment Groups</h2>
             <p className="text-xs text-muted-foreground">Active fulfiller routing queues</p>
             <div className="mt-3 space-y-1.5 text-sm">
@@ -324,8 +324,8 @@ export default function OverviewPage() {
                 { name: "Database Admin", role: "Data Platforms" },
                 { name: "CAB Approval", role: "Change Governance" },
               ].map((g) => (
-                <div key={g.name} className="flex items-center justify-between rounded-md bg-muted/60 px-2.5 py-1.5">
-                  <span className="font-medium text-xs">{g.name}</span>
+                <div key={g.name} className="flex items-center justify-between rounded-md bg-slate-50 border border-slate-100 px-2.5 py-1.5">
+                  <span className="font-medium text-xs text-slate-800">{g.name}</span>
                   <span className="font-ticket text-[11px] text-muted-foreground">{g.role}</span>
                 </div>
               ))}
