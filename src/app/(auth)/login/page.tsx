@@ -85,8 +85,10 @@ function LoginForm() {
   }, []);
 
   React.useEffect(() => {
-    if (status === "authenticated") router.replace(callbackUrl);
-  }, [status, router, callbackUrl]);
+    if (status === "authenticated") {
+      window.location.href = callbackUrl;
+    }
+  }, [status, callbackUrl]);
 
   const fail = () => {
     const wrap = wrapRef.current;
@@ -109,7 +111,9 @@ function LoginForm() {
       fail();
     } else {
       setDone(true);
-      setTimeout(() => router.push(callbackUrl), 650);
+      setTimeout(() => {
+        window.location.href = callbackUrl;
+      }, 500);
     }
   };
 
