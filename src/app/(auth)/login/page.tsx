@@ -196,43 +196,6 @@ function LoginForm() {
         </span>
       </form>
 
-      {/* Demo Credentials Quick-Fill */}
-      <div className="mt-4 rounded-xl border border-[var(--ls-line)] bg-[var(--ls-mist)] p-3 text-xs">
-        <p className="font-semibold text-[var(--ls-ink)]">Quick Demo Accounts:</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("admin@opennow.local");
-              setPassword("Password123!");
-            }}
-            className="rounded-md border border-[var(--ls-line)] bg-background px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            Admin (System Admin)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("fulfiller@opennow.local");
-              setPassword("Password123!");
-            }}
-            className="rounded-md border border-[var(--ls-line)] bg-background px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            ITIL (Fulfiller)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("abel.tuter@example.com");
-              setPassword("Password123!");
-            }}
-            className="rounded-md border border-[var(--ls-line)] bg-background px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            Employee (Self-Service)
-          </button>
-        </div>
-      </div>
-
       <p className="mt-6 text-center text-sm text-[var(--ls-muted)]">
         Don&apos;t have an account?{" "}
         <a href="/register" className="font-semibold text-[var(--ls-ink)] underline-offset-4 hover:underline">
