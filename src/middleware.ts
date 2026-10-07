@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { gateForRequest } from "@/lib/security/gates";
 
 /**
- * Edge-safe session gate. Auth.js v5 encrypts its JWT session cookie (JWE)
- * with an HKDF-derived key, so we read it via Auth.js's own getToken instead
- * of decrypting by hand (raw AUTH_SECRET bytes do NOT decrypt it).
+ * Edge-safe session gate. Instead of decrypting the Auth.js JWT by hand
+ * (cookie names, salts and key derivation must match exactly or every
+ * logged-in user bounces to login), we ask the app's own session endpoint —
+ * the identical code path the client `useSession` hook uses, so the two can
+ * never disagree about who is signed in.
  */
 async function rolesFromRequest(req: NextRequest): Promise<string[] | null> {
-  if (!process.env.AUTH_SECRET) return null;
+  const cookie = req.headers.get("cookie");
+  if (!cookie) return null;
   try {
-    const token =
-      (await getToken({ req: req as any, secret: process.env.AUTH_SECRET, salt: "authjs.session-token" })) ??
-      (await getToken({
-        req: req as any,
-        secret: process.env.AUTH_SECRET,
-        cookieName: "__Secure-authjs.session-token",
-        salt: "__Secure-authjs.session-token",
-      }));
-    if (!token) return null;
-    const roles = (token as any).roles;
+    // Same-container loopback: no proxy, no DNS, no extra hops.
+    const port = process.env.PORT || "3000";
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/session`, {
+      headers: { cookie },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const session = await res.json();
+    if (!session?.user) return null;
+    const roles = (session.user as any)?.roles;
     return Array.isArray(roles) ? roles : [];
   } catch {
     return null;
