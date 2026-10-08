@@ -42,7 +42,7 @@ npm run worker
 Run tests / typecheck / production build:
 
 ```powershell
-npm test            # vitest — 13 tests (engines, ACL, integration)
+npm test            # vitest — 35 tests (engines, ACL, gates, integration)
 npx tsc --noEmit
 npm run build
 ```
@@ -53,6 +53,10 @@ npm run build
 > delete `.next`, start one server.
 
 ## Login (seeded, password `Password123!`)
+
+Credentials sign-in accepts **username or email**. Self-registration is open
+at `/register` (new accounts get the `employee` role). No demo-credentials box
+is shown on the login page by design.
 
 | Username | Roles |
 |---|---|
@@ -83,16 +87,27 @@ AUTH_MICROSOFT_ENTRA_ID_TENANT=common   # or your tenant ID
 
 See `.env.example`. Restart `npm run dev` after adding keys.
 
+Production redirect URIs (Dokploy):
+
+```bash
+https://<your-domain>/api/auth/callback/google
+https://<your-domain>/api/auth/callback/microsoft-entra-id
+```
+
+`/privacy` and `/terms` are public by design — registrars and OAuth reviewers
+fetch them unauthenticated, so keep them deployed.
+
 ## Authorization (every page)
 
 `src/middleware.ts` (Edge-safe, verifies the Auth.js JWT via `jose`) gates
-**all** routes except `/login`, `/api/auth/*` and static assets:
+**all** routes except `/`, `/login`, `/register`, `/privacy`, `/terms`,
+`/api/auth/*` and static assets:
 
 | Who | Where |
 |---|---|
-| Anyone, no session (`/` shows sign-in prompts for live sections) | `/`, `/login` |
+| Anyone, no session (`/` shows sign-in prompts for live sections) | `/`, `/login`, `/register`, `/privacy`, `/terms` |
 | Signed-out pages → `/login`; session-less API → `401` | everything else |
-| `employee` (any signed-in user) | `/`, `/workspace` (overview), `/workspace/cmdb`, `/workspace/knowledge`, `/catalog`, `/tickets`, `/settings` |
+| `employee` (any signed-in user) | `/workspace` (overview), `/workspace/cmdb`, `/workspace/knowledge`, `/catalog`, `/kb`, `/tickets`, `/settings` |
 | `admin` / `itil` / `itil_admin` only (others → `/tickets`) | `/workspace/incident`, `/workspace/change`, `/workspace/problem`, `/workspace/catalog-builder` |
 | `admin` only (others → `/`) | `/admin/users` — Users & access dashboard |
 
@@ -154,12 +169,17 @@ Priority is derived, never set directly:
 ## Project structure
 
 ```
-docker/docker-compose.yml   Postgres 16 + Redis 7
+docker/docker-compose.yml   Postgres 16 + Redis 7 (local dev)
+dokploy-compose.yml         app + worker + postgres + redis (production, Dokploy)
+Dockerfile / Dockerfile.worker   standalone app / worker images
 drizzle/                    migrations (applied via src/lib/db/migrate.ts)
 src/
-  app/                      routes: / (landing console), /login,
-                            /workspace/{incident,change,problem}, /catalog, /tickets,
+  app/                      routes: / (landing), /(auth)/{login,register},
+                            /privacy, /terms, /settings,
+                            /(fulfiller)/workspace/{incident,change,problem,cmdb,knowledge,catalog-builder},
+                            /(portal)/{catalog,kb,tickets}, /admin/users,
                             /api/now/table/[table](/[id]), /api/auth/[...nextauth]
+  fonts/                    self-hosted Space Grotesk, Plus Jakarta Sans, JetBrains Mono
   components/
     ui/                     shadcn primitives (button, card, badge, input, dialog…)
     deck/                   ops-deck shell: command rail, status strip, queue table, activity feed
@@ -183,10 +203,46 @@ tests/                      vitest: engines, ACL, query parser, SLA, DB integrat
   page slides, toasts, success checks), view-transition CSS recipes ready for a
   Next upgrade (React 18 has no `<ViewTransition>` component, so navigation uses
   `startTransition` + native `document.startViewTransition` enhancement).
-- Landing `/` is a live console: real queue counts, runnable sysparm playground,
-  lifecycle strip — all querying your database.
+- Landing `/` is a live console: chat-demo hero, scroll story, queue marquee,
+  spotlight cards, runnable sysparm playground, lifecycle strip — real data,
+  sign-in prompts for guests.
+- App shell: dark sidebar, ⌘K command palette, notification center, sparklines,
+  empty-state art, welcome modal. Tables scroll horizontally on mobile; auth and
+  portal forms stack.
 
 ## Environment (.env)
 
 `DATABASE_URL` (postgres), `REDIS_HOST`/`REDIS_PORT`, `AUTH_SECRET`,
 `SLA_CHECK_INTERVAL_SECONDS=60`. See `.env.example`.
+
+## Production (Dokploy)
+
+`dokploy-compose.yml` deploys app + worker + Postgres 16 + Redis 7 as a
+Dokploy Compose service (source: this repo, `main`, compose path
+`dokploy-compose.yml`).
+
+Set these in the Dokploy environment UI (`dokploy-compose.yml` forwards them
+into the app container — a var set in the UI but missing from the compose
+`environment:` block never reaches the app):
+
+| Variable | Purpose |
+|---|---|
+| `POSTGRES_PASSWORD` | DB password (also interpolated into `DATABASE_URL`) |
+| `AUTH_SECRET` | Auth.js JWT secret (`openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | Public URL, e.g. `https://opennow.example.com` (localhost values are stripped at runtime so reverse-proxy headers win) |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Enables the Google button on `/login` |
+| `AUTH_MICROSOFT_ENTRA_ID_ID` / `AUTH_MICROSOFT_ENTRA_ID_SECRET` | Enables the Microsoft button on `/login` |
+
+After the first deploy, run once from the app container terminal:
+
+```bash
+npm run db:migrate && npm run db:seed
+```
+
+Verify OAuth wiring with `GET /api/auth/providers` — it lists every active
+provider (`google`, `microsoft-entra-id`, `credentials`).
+
+> Dokploy gotcha: **Redeploy** can build from a stale server-side checkout
+> (build steps show `CACHED`, new env still missing). If a redeploy doesn't
+> pick up a pushed change, run a fresh **Deploy** instead, which pulls latest
+> `main` before building.
