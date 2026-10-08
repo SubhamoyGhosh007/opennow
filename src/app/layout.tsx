@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "@/styles/motion-tokens.css";
 import "@/styles/transitions.css";
@@ -24,9 +24,37 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", weight: ["400", "500", "600", "700"] });
-const body = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-body", weight: ["400", "500", "600", "700", "800"] });
-const ticket = JetBrains_Mono({ subsets: ["latin"], variable: "--font-ticket", weight: ["500", "700"] });
+// Self-hosted (no build-time or runtime calls to Google Fonts — the deploy
+// environment cannot reliably reach fonts.gstatic.com).
+const display = localFont({
+  src: [
+    { path: "./fonts/space-grotesk-400.woff2", weight: "400" },
+    { path: "./fonts/space-grotesk-500.woff2", weight: "500" },
+    { path: "./fonts/space-grotesk-600.woff2", weight: "600" },
+    { path: "./fonts/space-grotesk-700.woff2", weight: "700" },
+  ],
+  variable: "--font-display",
+  display: "swap",
+});
+const body = localFont({
+  src: [
+    { path: "./fonts/plus-jakarta-sans-400.woff2", weight: "400" },
+    { path: "./fonts/plus-jakarta-sans-500.woff2", weight: "500" },
+    { path: "./fonts/plus-jakarta-sans-600.woff2", weight: "600" },
+    { path: "./fonts/plus-jakarta-sans-700.woff2", weight: "700" },
+    { path: "./fonts/plus-jakarta-sans-800.woff2", weight: "800" },
+  ],
+  variable: "--font-body",
+  display: "swap",
+});
+const ticket = localFont({
+  src: [
+    { path: "./fonts/jetbrains-mono-500.woff2", weight: "500" },
+    { path: "./fonts/jetbrains-mono-700.woff2", weight: "700" },
+  ],
+  variable: "--font-ticket",
+  display: "swap",
+});
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
