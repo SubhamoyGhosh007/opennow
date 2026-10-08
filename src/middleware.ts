@@ -132,6 +132,9 @@ export async function middleware(req: NextRequest) {
   // Landing is the public front door — live data sections degrade to sign-in prompts.
   if (pathname === "/") return NextResponse.next();
 
+  // Legal pages are public by design (registrars and OAuth reviewers fetch them unauthenticated).
+  if (pathname === "/privacy" || pathname === "/terms") return NextResponse.next();
+
   const roles = await rolesFromRequest(req);
 
   // The gates themselves stay public: guests see them, signed-in users pass through.
