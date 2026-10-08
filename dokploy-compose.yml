@@ -7,6 +7,9 @@
 #   POSTGRES_PASSWORD  - database password (also used in DATABASE_URL)
 #   AUTH_SECRET        - `openssl rand -base64 32`
 #   NEXTAUTH_URL       - public URL, e.g. https://opennow.your-domain.com
+# Optional OAuth (set in Dokploy UI to enable buttons on /login):
+#   AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET
+#   AUTH_MICROSOFT_ENTRA_ID_ID / AUTH_MICROSOFT_ENTRA_ID_SECRET
 
 services:
   app:
@@ -26,6 +29,10 @@ services:
       REDIS_PORT: "6379"
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in Dokploy env}
       NEXTAUTH_URL: ${NEXTAUTH_URL:?set NEXTAUTH_URL in Dokploy env}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      AUTH_MICROSOFT_ENTRA_ID_ID: ${AUTH_MICROSOFT_ENTRA_ID_ID:-}
+      AUTH_MICROSOFT_ENTRA_ID_SECRET: ${AUTH_MICROSOFT_ENTRA_ID_SECRET:-}
     restart: unless-stopped
 
   worker:
